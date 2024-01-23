@@ -2,8 +2,10 @@
 #define FARMMANAGER_HPP
 
 #include "Queue.hpp"
-#include "task.hpp"
+#include "Task.hpp"
 #include "thread_args.hpp"
+#include "Node.hpp"
+#include <vector>
 
 template <typename T>
 
@@ -11,6 +13,7 @@ class FarmManager {
 private:
     Queue<T> *emitter_queue;
     Queue<T> *collector_queue;
+    std::vector<Node<T>> farm_nodes;
     unsigned int num_worker_threads;
 
 public:
@@ -46,33 +49,27 @@ public:
         this->num_worker_threads = num_worker_threads;
     }
 
-    static void *thread_function(void *args) {
-        auto *thread_args1 = (thread_args<T> *) args;
-        Queue<T> *eq = thread_args1->get_emitter_queue();
-        Queue<T> *cq = thread_args1->get_collector_queue();
-        while (!eq->empty()) {
-            std::cout << "Thread " << pthread_self() << " received a task " << std::endl;
-            T task = eq->wait_and_pop();
-            task.run();
-            cq->push(task);
-            std :: cout << "Thread " << pthread_self() << " finished a task " << std::endl;
-        }
-    }
-
     void run() {
-        // make a list of threads
-        pthread_t threads[num_worker_threads];
-
-        thread_args<T> thread_args1(emitter_queue, collector_queue);
-
-        // create threads
+        // Add EOS tasks to the emitter queue for each worker thread
         for (int i = 0; i < num_worker_threads; i++) {
-            pthread_create(&threads[i], nullptr, thread_function, (void *) &thread_args1);
+            T task;
+            task.set_is_eos(true);
+            emitter_queue->push(task);
         }
 
-        // wait for all threads to finish
+        // create nodes
         for (int i = 0; i < num_worker_threads; i++) {
-            pthread_join(threads[i], nullptr);
+            // Create a node
+            Node<T> node = Node<T>(emitter_queue, collector_queue);
+            node.set_is_farm(true);
+
+            node.start_node();
+            farm_nodes.push_back(node);
+        }
+
+        // join threads
+        for (int i = 0; i < num_worker_threads; i++) {
+            farm_nodes[i].join_node();
         }
     }
 };

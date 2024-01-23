@@ -9,4 +9,8 @@ add_executable(ppl main.cpp
         FarmManager.hpp
         thread_args.cpp
         thread_args.hpp
+        SequentialManager.hpp
+        Timer.hpp
+        PipelineManager.hpp
+        node.hpp
 )
