@@ -4,7 +4,7 @@
 #include "Queue.hpp"
 #include "Task.hpp"
 #include "thread_args.hpp"
-#include "Node.hpp"
+#include "node.hpp"
 #include <vector>
 
 template <typename T>

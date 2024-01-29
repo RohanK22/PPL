@@ -60,6 +60,7 @@ public:
         this->is_pipline = is_pipeline;
     }
 
+    // TODO: Move to farm / pipeline manager
     static void *thread_function(void *args) {
         // Get the arguments
         auto thread_args1 = static_cast<thread_args<T>*>(args);
@@ -99,6 +100,9 @@ public:
     void join_node() {
         pthread_join(this->worker_thread, nullptr);
     }
+
+    // The function inteface that performs the actual work
+    virtual void* run(void *task) = 0;
 };
 
 #endif //PPL_NODE_HPP

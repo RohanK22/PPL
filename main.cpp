@@ -5,12 +5,14 @@
 #include "SequentialManager.hpp"
 #include "Timer.hpp"
 #include "PipelineManager.hpp"
+#include <vector>
+#include <algorithm>
 
 #define ll long long
 
 using namespace std;
 
-class MultiplyTwoNumbersTask: public Task {
+class MultiplyTwoNumbersTask: public Node {
 public:
     void run() override {
         result = a * b;
@@ -30,7 +32,6 @@ private:
 };
 
 // Factoral Task
-
 class FactorialTask: public Task {
 public:
     void run() override {
@@ -108,9 +109,6 @@ void runFarmManagerOnMultiplyTasks() {
     // Run the farm manager
     farmManager.run();
 }
-
-#include <vector>
-#include <algorithm>
 
 void runPipelineManagerOnTestPiplineTasks(int num_tasks) {
     PipelineManager<AddThenDoubleAndSumTask> pipelineManager = PipelineManager<AddThenDoubleAndSumTask>(

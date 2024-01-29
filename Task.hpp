@@ -2,6 +2,7 @@
 #ifndef PPL_TASK_H
 #define PPL_TASK_H
 
+// This is supposed to encapsulate data 
 class Task {
 public:
     bool is_eos = false;
