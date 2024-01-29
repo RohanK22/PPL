@@ -1,54 +1,17 @@
 #include <iostream>
-#include "Task.hpp"
-#include "FarmManager.hpp"
-#include "Queue.hpp"
-#include "SequentialManager.hpp"
-#include "Timer.hpp"
-#include "PipelineManager.hpp"
+#include "../Task.hpp"
+#include "../FarmManager.hpp"
+#include "../Queue.hpp"
+#include "../SequentialManager.hpp"
+#include "../Timer.hpp"
+#include "../PipelineManager.hpp"
 #include <vector>
 #include <algorithm>
+#include "../Node.hpp"
 
 #define ll long long
 
 using namespace std;
-
-class MultiplyTwoNumbersTask: public Node {
-public:
-    void run() override {
-        result = a * b;
-//        std::cout << "Result: " << result << std::endl;
-    }
-
-    void set_data(int a, int b) {
-        this->a = a;
-        this->b = b;
-    }
-private:
-    // data items
-    int a;
-    int b;
-    // result
-    int result;
-};
-
-// Factoral Task
-class FactorialTask: public Task {
-public:
-    void run() override {
-        result = 1;
-        for (int i = 1; i <= n; i++) {
-            result *= i;
-        }
-//        std::cout << "Result: " << result << std::endl;
-    }
-
-    void set_data(int n) {
-        this->n = n;
-    }
-private:
-    ll n;
-    ll result;
-};
 
 // Pipeline Task
 class AddThenDoubleAndSumTask: public Task {
@@ -80,6 +43,26 @@ public:
 
     void set_data(std::vector<int> nums) {
         this->nums = nums;
+    }
+};
+
+// Pipeline task 2
+// What needs to be done is the pipeline task should be broken down into multiple stages that are nodes
+// The farm manager should be able to take in a vector of nodes and run them
+
+class Stage1: public Node<void*>  {
+public:
+    void* run(void* task) override {
+        std::cout << "Stage 1" << std::endl;
+        return nullptr;
+    }
+};
+
+class Stage2: public Node<void*>  {
+public:
+    void* run(void* task) override {
+        std::cout << "Stage 2" << std::endl;
+        return nullptr;
     }
 };
 

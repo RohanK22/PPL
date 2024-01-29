@@ -6,14 +6,14 @@
 #define PPL_THREAD_ARGS_HPP
 
 #include "Queue.hpp"
+#include "Node.hpp"
 
 template <typename T>
 
 class thread_args {
 public:
-    thread_args(Queue<T> *emitterQueue, Queue<T> *collectorQueue) {
-        this->emitterQueue = emitterQueue;
-        this->collectorQueue = collectorQueue;
+    thread_args(Node<T> *node) {
+        this->node = node;
     }
 
     Queue<T> *get_emitter_queue() {
@@ -24,7 +24,12 @@ public:
         return collectorQueue;
     }
 
+    Node<T> *get_node() {
+        return node;
+    }
+
 private:
+    Node<T> *node;
     Queue<T> *emitterQueue;
     Queue<T> *collectorQueue;
 };

@@ -10,7 +10,6 @@
 #include "thread_args.hpp"
 
 template <typename T>
-
 class Node {
 private:
     pthread_t worker_thread;
@@ -63,9 +62,15 @@ public:
     // TODO: Move to farm / pipeline manager
     static void *thread_function(void *args) {
         // Get the arguments
-        auto thread_args1 = static_cast<thread_args<T>*>(args);
-        Queue<T> *eq = thread_args1->get_emitter_queue();
-        Queue<T> *cq = thread_args1->get_collector_queue();
+        Node<T> *node = (Node<T> *) args;
+
+        if (node == nullptr) {
+            std::cout << "Node is null" << std::endl;
+            return nullptr;
+        }
+
+        Queue<T> *eq = node->get_input_queue();
+        Queue<T> *cq = node->get_output_queue();
 //        while (!eq->empty()) {
         while (true) {
 //            std::cout << "Thread " << pthread_self() << " received a task " << std::endl;
@@ -74,27 +79,26 @@ public:
             bool success = eq->try_pop(task);
 
             // Check if T is an EOS task
-            if (task.get_is_eos()) {
-                std::cout << "Thread " << pthread_self() << " received an EOS task " << std::endl;
-                cq->push(task);
-                break;
-            }
-
-//            if (!success) {
-//                // Stop thread if there are no more tasks
-////                std::cout << "Thread " << pthread_self() << " finished all tasks " << std::endl;
+//            if (task.get_is_eos()) {
+//                std::cout << "Thread " << pthread_self() << " received an EOS task " << std::endl;
+//                cq->push(task);
 //                break;
 //            }
 
-            task.run();
-            cq->push(task);
+            if (!success) {
+                continue;
+            }
+
+            // Run the task and store results
+            void *result = node->run(task);
+
+//            cq->push(result);
 //            std :: cout << "Thread " << pthread_self() << " finished a task " << std::endl;
         }
     }
 
     void start_node() {
-        thread_args<T> *args = new thread_args<T>(this->input_queue, this->output_queue);
-        pthread_create(&this->worker_thread, nullptr, thread_function, (void *) args);
+        pthread_create(&this->worker_thread, nullptr, thread_function, (void *) this);
     }
 
     void join_node() {
