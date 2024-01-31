@@ -11,89 +11,58 @@
 #include "Node.hpp"
 #include <vector>
 
-template <typename T>
-
-class PipelineManager {
+class PipelineManager : public Node {
 private:
-    Queue<T> *emitter_queue;
-    Queue<T> *collector_queue;
-    std::vector<Queue<T>*> intermediate_queues;
-    std::vector<Node<T>*> pipeline_nodes;
-    unsigned int num_nodes; // number of steps in the pipeline
+    std::vector<Node*> pipeline_nodes;
+    unsigned int num_pipeline_stages;
 
 public:
-    // Constructor
     PipelineManager() = default;
 
-    // Constructor with emitter and collector queue
-    PipelineManager(Queue<T> *eq, Queue<T> *cq) {
-        this->emitter_queue = eq;
-        this->collector_queue = cq;
-    }
-
-    bool set_emitter_queue(Queue<T> *eq){
-        this->emitter_queue = eq;
-    }
-
-    bool set_collector_queue(Queue<T> *cq) {
-        this->collector_queue = cq;
-    }
-
-    Queue<T> *get_emitter_queue() {
-        return this->emitter_queue;
-    }
-
-    Queue<T> *get_collector_queue() {
-        return this->collector_queue;
+    unsigned int get_num_pipeline_stages() {
+        return this->num_pipeline_stages;
     }
 
     // Add stage to the pipeline
-    void add_stage(Node<T> *node) {
+    void add_stage(Node *node) {
+        node->set_is_pipeline_stage(true);
         pipeline_nodes.push_back(node);
 
         // Connect the node
         if (pipeline_nodes.size() == 1) {
-            pipeline_nodes[0]->set_input_queue(emitter_queue);
-            pipeline_nodes[0]->set_output_queue(collector_queue);
+            pipeline_nodes[0]->set_input_queue(this->get_input_queue());
+            pipeline_nodes[0]->set_output_queue(this->get_output_queue());
         } else {
-            // Make an intermediate queue
-            Queue<T> *intermediate_queue = new Queue<T>();
-            intermediate_queues.push_back(intermediate_queue);
-
-            // Connect the node
-            pipeline_nodes.back()->set_input_queue(intermediate_queues.back());
-            pipeline_nodes.back()->set_output_queue(collector_queue);
-
-            // Rewire the previous node
-            pipeline_nodes[pipeline_nodes.size() - 2]->set_output_queue(intermediate_queues[intermediate_queues.size() - 1]);
+            // TODO: Warning: There is a slight memory leak here
+            Queue<void*> *new_queue = new Queue<void*>();
+            pipeline_nodes[pipeline_nodes.size() - 2]->set_output_queue(new_queue);
+            pipeline_nodes.back()->set_input_queue(new_queue);
+            pipeline_nodes.back()->set_output_queue(this->get_output_queue());
         }
+
+        this->num_pipeline_stages = pipeline_nodes.size();
     }
 
-    void run() {
-        if (this->num_nodes < 1) {
-            std::cout << "Error: Pipeline can not have less than one stage" << std::endl;
-            return;
+    void* run(void *task) {
+        std::cout << "Node 1 input queue: " << pipeline_nodes[0]->get_input_queue() << std::endl;
+        std::cout << "Node 1 output queue: " << pipeline_nodes[0]->get_output_queue() << std::endl;
+        std::cout << "Node 2 input queue: " << pipeline_nodes[1]->get_input_queue() << std::endl;
+        std::cout << "Node 2 output queue: " << pipeline_nodes[1]->get_output_queue() << std::endl;
+
+        if (this->num_pipeline_stages < 1) {
+            throw std::runtime_error("Pipeline must have at least one stage");
         }
 
-//        // Add EOS tasks to the emitter queue for each worker thread
-//        for (int i = 0; i < num_nodes; i++) {
-//            T task;
-//            task.set_is_eos(true);
-//            emitter_queue->push(task);
-//        }
-
-        std::cout << "Number of intermediate queues: " << intermediate_queues.size() << std::endl;
-        std::cout << "Number of pipeline nodes: " << pipeline_nodes.size() << std::endl;
-
         // Start node
-        for (int i = 0; i < num_nodes; i ++) {
+        for (int i = 0; i < num_pipeline_stages; i ++) {
             pipeline_nodes[i]->start_node();
         }
 
         // join threads
-        for (int i = 0; i < num_nodes; i++) {
+        for (int i = 0; i < num_pipeline_stages; i++) {
             pipeline_nodes[i]->join_node();
         }
+        return nullptr;
     }
 };
 

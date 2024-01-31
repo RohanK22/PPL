@@ -9,46 +9,46 @@
 #include "Queue.hpp"
 #include "thread_args.hpp"
 
-template <typename T>
 class Node {
 private:
     pthread_t worker_thread;
-    Queue<T> *input_queue;
-    Queue<T> *output_queue;
+    Queue<void*> *input_queue;
+    Queue<void*> *output_queue;
 
-    unsigned int stage;
+    bool is_emitter;
     bool is_farm;
     bool is_pipline;
+    bool is_pipeline_stage;
+    bool is_farm_worker;
 
 public:
     // Constructor
-    Node() = default;
+    Node() {
+        // Malloc new queues for input and output
+        this->input_queue = new Queue<void*>();
+        this->output_queue = new Queue<void*>();
+    }
 
     // Constructor with emitter queue and collector queue
-    Node(Queue<T> *iq, Queue<T> *oq) {
+    Node(Queue<void*> *iq, Queue<void*> *oq) {
         this->input_queue = iq;
         this->output_queue = oq;
     }
 
-    bool set_input_queue(Queue<T> *iq){
+    void set_input_queue(Queue<void*> *iq){
         this->input_queue = iq;
     }
 
-    bool set_output_queue(Queue<T> *oq) {
+    void set_output_queue(Queue<void*> *oq) {
         this->output_queue = oq;
     }
 
-    Queue<T> *get_input_queue() {
+    Queue<void*> *get_input_queue() {
         return this->input_queue;
     }
 
-    Queue<T> *get_output_queue() {
+    Queue<void*> *get_output_queue() {
         return this->output_queue;
-    }
-
-    // Set worker threads
-    void set_stage(unsigned int stage) {
-        this->stage = stage;
     }
 
     void set_is_farm(bool is_farm) {
@@ -59,41 +59,64 @@ public:
         this->is_pipline = is_pipeline;
     }
 
-    // TODO: Move to farm / pipeline manager
+    void set_is_emitter(bool is_emitter) {
+        this->is_emitter = is_emitter;
+    }
+
+    void set_is_pipeline_stage(bool is_pipeline_stage) {
+        this->is_pipeline_stage = is_pipeline_stage;
+    }
+
+    void set_is_farm_worker(bool is_farm_worker) {
+        this->is_farm_worker = is_farm_worker;
+    }
+
     static void *thread_function(void *args) {
         // Get the arguments
-        Node<T> *node = (Node<T> *) args;
+        Node *node = static_cast<Node*>(args);
 
         if (node == nullptr) {
             std::cout << "Node is null" << std::endl;
-            return nullptr;
+            throw std::runtime_error("Node argument is null that is passed to the thread function");
         }
 
-        Queue<T> *eq = node->get_input_queue();
-        Queue<T> *cq = node->get_output_queue();
-//        while (!eq->empty()) {
-        while (true) {
-//            std::cout << "Thread " << pthread_self() << " received a task " << std::endl;
+        Queue<void*> *eq = node->get_input_queue();
+        Queue<void*> *cq = node->get_output_queue();
 
-            T task;
+        while (true) {
+            if (node->is_emitter) {
+                void *result = node->run(nullptr);
+                if (result == nullptr) {
+                    std::cout << "Emitter output null result (EOS)" << std::endl;
+                    cq->push(nullptr);
+                    break;
+                }
+                cq->push(result);
+                continue;
+            }
+
+            void *task = nullptr;
             bool success = eq->try_pop(task);
 
-            // Check if T is an EOS task
-//            if (task.get_is_eos()) {
-//                std::cout << "Thread " << pthread_self() << " received an EOS task " << std::endl;
-//                cq->push(task);
-//                break;
-//            }
-
             if (!success) {
+                // Busy wait only stops if an EOS is received
                 continue;
+            }
+
+            if (task == nullptr) {
+                std::cout << "Thread " << pthread_self() << " received EOS " << std::endl;
+                if (node->is_pipeline_stage) {
+                    // Make sure that the EOS is pushed to the output queue so that the next stage can receive it
+                    cq->push(task);
+                }
+                break;
             }
 
             // Run the task and store results
             void *result = node->run(task);
 
-//            cq->push(result);
-//            std :: cout << "Thread " << pthread_self() << " finished a task " << std::endl;
+            // Push the result to the output queue
+            cq->push(result);
         }
     }
 
@@ -101,11 +124,15 @@ public:
         pthread_create(&this->worker_thread, nullptr, thread_function, (void *) this);
     }
 
+    void stop_node() {
+        pthread_cancel(this->worker_thread);
+    }
+
     void join_node() {
         pthread_join(this->worker_thread, nullptr);
     }
 
-    // The function inteface that performs the actual work
+    // Run the task (to be implemented by the user)
     virtual void* run(void *task) = 0;
 };
 

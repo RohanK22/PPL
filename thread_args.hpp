@@ -8,30 +8,28 @@
 #include "Queue.hpp"
 #include "Node.hpp"
 
-template <typename T>
-
 class thread_args {
 public:
-    thread_args(Node<T> *node) {
+    thread_args(Node *node) {
         this->node = node;
     }
 
-    Queue<T> *get_emitter_queue() {
+    Queue<void*> *get_emitter_queue() {
         return emitterQueue;
     }
 
-    Queue<T> *get_collector_queue() {
+    Queue<void*> *get_collector_queue() {
         return collectorQueue;
     }
 
-    Node<T> *get_node() {
+    Node *get_node() {
         return node;
     }
 
 private:
-    Node<T> *node;
-    Queue<T> *emitterQueue;
-    Queue<T> *collectorQueue;
+    Node *node;
+    Queue<void*> *emitterQueue;
+    Queue<void*> *collectorQueue;
 };
 
 

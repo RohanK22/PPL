@@ -13,4 +13,6 @@ add_executable(ppl Examples/pipeline_test.cpp
         Node.hpp
         thread_args.cpp
         thread_args.hpp
+        EOS.cpp
+        EOS.hpp
 )
