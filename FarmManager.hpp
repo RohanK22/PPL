@@ -8,68 +8,76 @@
 #include <vector>
 
 
-class FarmManager {
+class FarmManager : public Node {
 private:
-    Queue<void*> *emitter_queue;
-    Queue<void*> *collector_queue;
-    std::vector<Node*> farm_nodes;
-    unsigned int num_worker_threads;
+    Node *emitter_node;
+    std::vector<Node*> worker_nodes;
+    Node *collector_node;
 
 public:
-    // Constructor
     FarmManager() = default;
 
-    // Constructor with emitter queue and collector queue
-    FarmManager(Queue<void*> *eq, Queue<void*> *cq) {
-        this->emitter_queue = eq;
-        this->collector_queue = cq;
+    unsigned int get_num_worker_nodes() {
+        return this->num_farm_worker_nodes;
     }
 
-    // Emitter queue has a tasks, the collector queue collects results from those tasks
-    // FarmManager creates a farm of threads and distributes tasks to them
-    void set_emitter_queue(Queue<void*> *eq){
-        this->emitter_queue = eq;
+    // Add emitter node
+    void add_emitter(Node *node) {
+        node->set_is_farm_emitter(true);
+        node->set_input_queue(this->get_input_queue());
+        node->set_farm_node(this);
+        this->emitter_node = node;
     }
 
-    void set_collector_queue(Queue<void*> *cq) {
-        this->collector_queue = cq;
+    // Add collector node
+    void add_collector(Node *node) {
+        node->set_output_queue(this->get_output_queue());
+        node->set_farm_node(this);
+        this->collector_node = node;
     }
 
-    Queue<void*> *get_emitter_queue() {
-        return this->emitter_queue;
-    }
-
-    Queue<void*> *get_collector_queue() {
-        return this->collector_queue;
-    }
-
-    // Set worker threads
-    void set_num_worker_threads(unsigned int num_worker_threads) {
-        this->num_worker_threads = num_worker_threads;
-    }
-
-    void run() {
-//        // Add EOS tasks to the emitter queue for each worker thread
-//        for (int i = 0; i < num_worker_threads; i++) {
-//            T task;
-//            task.set_is_eos(true);
-//            emitter_queue->push(task);
-//        }
-
-        // create nodes
-        for (int i = 0; i < num_worker_threads; i++) {
-            // Create a node
-            Node *node = new Node(emitter_queue, collector_queue);
-            node->set_is_farm(true);
-
-            node->start_node();
-            farm_nodes.push_back(node);
+    // Add worker nodes
+    void add_worker(Node *node) {
+        node->set_is_farm_worker(true);
+        node->set_farm_node(this);
+        worker_nodes.push_back(node);
+        if (this->emitter_node != nullptr) {
+            node->set_input_queue(this->emitter_node->get_output_queue());
+        } else {
+            node->set_input_queue(this->get_input_queue());
         }
+        if (this->collector_node != nullptr) {
+            node->set_output_queue(this->collector_node->get_input_queue());
+        } else {
+            node->set_output_queue(this->get_output_queue());
+        }
+
+        this->num_farm_worker_nodes = worker_nodes.size();
+    }
+
+    void* run(void *task) {
+        std::cout << "Emitter input queue: " << emitter_node->get_input_queue() << std::endl;
+        std::cout << "Emitter output queue: " << emitter_node->get_output_queue() << std::endl;
+        std::cout << "Worker 1 input queue: " << worker_nodes[0]->get_input_queue() << std::endl;
+        std::cout << "Worker 1 output queue: " << worker_nodes[0]->get_output_queue() << std::endl;
+        std::cout << "Collector input queue: " << collector_node->get_input_queue() << std::endl;
+        std::cout << "Collector output queue: " << collector_node->get_output_queue() << std::endl;
+
+        // Start nodes
+        emitter_node->start_node();
+        for (int i = 0; i < num_farm_worker_nodes; i++) {
+            worker_nodes[i]->set_is_farm_worker(true);
+            worker_nodes[i]->start_node();
+        }
+        collector_node->start_node();
 
         // join threads
-        for (int i = 0; i < num_worker_threads; i++) {
-            farm_nodes[i].join_node();
+        emitter_node->join_node();
+        for (int i = 0; i < num_farm_worker_nodes; i++) {
+            worker_nodes[i]->join_node();
         }
+        collector_node->join_node();
+        return nullptr;
     }
 };
 

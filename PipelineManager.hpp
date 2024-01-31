@@ -14,7 +14,6 @@
 class PipelineManager : public Node {
 private:
     std::vector<Node*> pipeline_nodes;
-    unsigned int num_pipeline_stages;
 
 public:
     PipelineManager() = default;
@@ -44,12 +43,12 @@ public:
     }
 
     void* run(void *task) {
-        std::cout << "Node 1 input queue: " << pipeline_nodes[0]->get_input_queue() << std::endl;
-        std::cout << "Node 1 output queue: " << pipeline_nodes[0]->get_output_queue() << std::endl;
-        std::cout << "Node 2 input queue: " << pipeline_nodes[1]->get_input_queue() << std::endl;
-        std::cout << "Node 2 output queue: " << pipeline_nodes[1]->get_output_queue() << std::endl;
-        std::cout << "Node 3 input queue: " << pipeline_nodes[2]->get_input_queue() << std::endl;
-        std::cout << "Node 3 output queue: " << pipeline_nodes[2]->get_output_queue() << std::endl;
+//        std::cout << "Node 1 input queue: " << pipeline_nodes[0]->get_input_queue() << std::endl;
+//        std::cout << "Node 1 output queue: " << pipeline_nodes[0]->get_output_queue() << std::endl;
+//        std::cout << "Node 2 input queue: " << pipeline_nodes[1]->get_input_queue() << std::endl;
+//        std::cout << "Node 2 output queue: " << pipeline_nodes[1]->get_output_queue() << std::endl;
+//        std::cout << "Node 3 input queue: " << pipeline_nodes[2]->get_input_queue() << std::endl;
+//        std::cout << "Node 3 output queue: " << pipeline_nodes[2]->get_output_queue() << std::endl;
 
         if (this->num_pipeline_stages < 1) {
             throw std::runtime_error("Pipeline must have at least one stage");

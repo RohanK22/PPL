@@ -1,3 +1,4 @@
+// A simple farm example where each worker computes a factorial of a number
 #include <iostream>
 #include "../Task.hpp"
 #include "../FarmManager.hpp"
@@ -9,194 +10,75 @@
 #include <algorithm>
 #include "../Node.hpp"
 
-#define ll long long
-
 using namespace std;
 
-// Pipeline Task
-class AddThenDoubleAndSumTask: public Task {
-private:
-    int result;
-    // vector of ints
-    std::vector<int> nums;
-    int stage = 0;
-
+class FactorialEmitter: public Node  {
 public:
-    void run() override {
-        if (stage == 0) {
-            // double everything in data
-            for (int i = 0; i < nums.size(); i++) {
-                nums[i] *= 2;
-            }
-            std::cout << "Stage 1 done" << std::endl;
-            stage++;
-        } else if (stage == 1) {
-            // sum everything in data
-            result = 0;
-            for (int i = 0; i < nums.size(); i++) {
-                result += nums[i];
-            }
-            std::cout << "Stage 2 done" << std::endl;
-            stage++;
+    FactorialEmitter(int num_tasks) {
+        this->num_tasks = num_tasks;
+        this->set_is_pipeline_emitter(true);
+    }
+
+    void* run(void*) override {
+        if (curr == num_tasks) {
+            std::cout << "Generator Done" << std::endl;
+            return nullptr;
         }
+        std::cout << "Generated task " << curr << std::endl;
+        curr++;
+        return (void*) new int(curr);
     }
 
-    void set_data(std::vector<int> nums) {
-        this->nums = nums;
-    }
+private:
+    int num_tasks;
+    int curr = 0;
 };
 
-// Pipeline task 2
-// What needs to be done is the pipeline task should be broken down into multiple stages that are nodes
-// The farm manager should be able to take in a vector of nodes and run them
-
-class Stage1: public Node<void*>  {
+class FactorialWorker: public Node  {
 public:
     void* run(void* task) override {
-        std::cout << "Stage 1" << std::endl;
-        return nullptr;
+        std:: cout << "Worker received task " << receive_count << std::endl;
+        int *num = (int *) task;
+        long long *result = new long long(1);
+        for (int i = 1; i <= *num; i++) {
+            *result *= i;
+        }
+        receive_count++;
+        return (void*) result;
     }
+
+private:
+    int receive_count = 0;
 };
 
-class Stage2: public Node<void*>  {
+class FactorialCollector: public Node  {
 public:
     void* run(void* task) override {
-        std::cout << "Stage 2" << std::endl;
+        std::cout << "Collector received task " << receive_count << std::endl;
+        long long *num = (long long *) task;
+        std::cout << "Factorial is " << *num << std::endl;
+        receive_count++;
         return nullptr;
     }
+
+private:
+    int receive_count = 0;
 };
-
-void runFarmManagerOnMultiplyTasks() {
-    // Make a farm manager
-    FarmManager<MultiplyTwoNumbersTask> farmManager = FarmManager<MultiplyTwoNumbersTask>(
-            new Queue<MultiplyTwoNumbersTask>(),
-            new Queue<MultiplyTwoNumbersTask>()
-    );
-
-    // Set the number of worker threads
-    farmManager.set_num_worker_threads(4);
-
-    // Load the emitter queue with tasks
-    MultiplyTwoNumbersTask tasks[10];
-
-    // Set the data for each task
-    for (int i = 0; i < 10; i++) {
-        tasks[i].set_data(i, i + 1);
-    }
-
-    // Push the tasks to the emitter queue
-    for (int i = 0; i < 10; i++) {
-        farmManager.get_emitter_queue()->push(tasks[i]);
-    }
-
-    // Run the farm manager
-    farmManager.run();
-}
-
-void runPipelineManagerOnTestPiplineTasks(int num_tasks) {
-    PipelineManager<AddThenDoubleAndSumTask> pipelineManager = PipelineManager<AddThenDoubleAndSumTask>(
-            new Queue<AddThenDoubleAndSumTask>(),
-            new Queue<AddThenDoubleAndSumTask>()
-            );
-
-    pipelineManager.set_num_worker_threads(2);
-
-    AddThenDoubleAndSumTask tasks[num_tasks];
-
-    for (int i = 0; i < num_tasks; i ++) {
-        std::vector<int> v(40);
-        std::generate(v.begin(), v.end(), std::rand);
-        tasks[i].set_data(v);
-        pipelineManager.get_emitter_queue()->push(tasks[i]);
-    }
-
-    pipelineManager.run();
-}
-
-template <typename T>
-void runFarmMangerOnTasks(T tasks[], int num_tasks, int num_worker_threads) {
-    // Make a farm manager
-    FarmManager<T> farmManager = FarmManager<T>(
-            new Queue<T>(),
-            new Queue<T>()
-    );
-
-    // Set the number of worker threads
-    farmManager.set_num_worker_threads(num_worker_threads);
-
-    // Load the emitter queue with tasks
-
-    // Set the data for each task
-    for (int i = 0; i < num_tasks; i++) {
-        tasks[i].set_data(i + 1);
-    }
-
-    // Push the tasks to the emitter queue
-    for (int i = 0; i < num_tasks; i++) {
-        farmManager.get_emitter_queue()->push(tasks[i]);
-//        std::cout << "Pushed task " << i << std::endl;
-    }
-
-    // Run the farm manager
-    farmManager.run();
-}
-
-template <typename T>
-void runSequentialManagerOnTasks(T tasks[], int num_tasks) {
-    // Make a farm manager
-    SequentialManager<T> sequentialManager = SequentialManager<T>(
-            new Queue<T>(),
-            new Queue<T>()
-    );
-
-    // Load the emitter queue with tasks
-
-    // Set the data for each task
-    for (int i = 0; i < num_tasks; i++) {
-        tasks[i].set_data(i + 1);
-    }
-
-    // Push the tasks to the emitter queue
-    for (int i = 0; i < num_tasks; i++) {
-        sequentialManager.get_emitter_queue()->push(tasks[i]);
-//        std::cout << "Pushed task " << i << std::endl;
-    }
-
-    // Run the farm manager
-    sequentialManager.run();
-}
 
 int main() {
-    runPipelineManagerOnTestPiplineTasks(5);
+    FarmManager *farm = new FarmManager();
+    int num_tasks = 100;
+    int num_workers = 10;
+    FactorialEmitter *emitter = new FactorialEmitter(num_tasks);
+    FactorialCollector *collector = new FactorialCollector();
 
-//    int NUM_THREADS = 8;
-//    for (int i = 30000; i <= 30000; i += 1000) {
-//        int NUM_TASKS = i;
-//        NUM_TASKS = i;
-//        FactorialTask tasks[NUM_TASKS];
-//
-//        for (int j = 0; j < NUM_TASKS; j++) {
-//            // Randomly generate with a seed
-//            tasks[j].set_data(j + 1);
-//        }
-//
-//        Timer timer_sequential;
-//        Timer timer_farm;
-//
-//        timer_farm.start();
-//        runFarmMangerOnTasks(tasks, NUM_TASKS, NUM_THREADS);
-//        timer_farm.stop();
-//
-//        timer_sequential.start();
-//        runSequentialManagerOnTasks(tasks, NUM_TASKS);
-//        timer_sequential.stop();
-//
-//        double elapsed_time_sequential = timer_sequential.get_elapsed_time();
-//        double elapsed_time_farm = timer_farm.get_elapsed_time();
-//        double speedup = (elapsed_time_sequential / elapsed_time_farm);
-//
-//        // Print out the elapsed times on same line with consistent spacing
-//        std::cout << "Tasks, threads, sequential, farm, speedup(%): " << NUM_TASKS << ", " << NUM_THREADS << ", " << elapsed_time_sequential << ", " << elapsed_time_farm << ", " << speedup << std::endl;
-//    }
+    farm->add_emitter(emitter);
+    farm->add_collector(collector);
+    for (int i = 0; i < num_workers; i++) {
+        FactorialWorker *worker = new FactorialWorker();
+        farm->add_worker(worker);
+    }
+
+    farm->run(nullptr);
     return 0;
 }

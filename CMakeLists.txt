@@ -3,7 +3,7 @@ project(ppl)
 
 set(CMAKE_CXX_STANDARD 23)
 
-add_executable(ppl Examples/pipeline_test2.cpp
+add_executable(ppl
         Task.hpp
         Queue.hpp
         FarmManager.hpp
@@ -15,4 +15,6 @@ add_executable(ppl Examples/pipeline_test2.cpp
         thread_args.hpp
         EOS.cpp
         EOS.hpp
+#        Examples/farm_test.cpp
+        Examples/pipeline_test2.cpp
 )

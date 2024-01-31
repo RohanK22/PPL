@@ -15,11 +15,18 @@ private:
     Queue<void*> *input_queue;
     Queue<void*> *output_queue;
 
-    bool is_emitter;
+    bool is_pipeline_emitter;
     bool is_farm;
     bool is_pipline;
     bool is_pipeline_stage;
     bool is_farm_worker;
+    bool is_farm_emitter;
+
+protected:
+    Node *farm_node;
+    unsigned int num_farm_worker_nodes;
+    Node *pipeline_node;
+    unsigned int num_pipeline_stages;
 
 public:
     // Constructor
@@ -59,8 +66,8 @@ public:
         this->is_pipline = is_pipeline;
     }
 
-    void set_is_emitter(bool is_emitter) {
-        this->is_emitter = is_emitter;
+    void set_is_pipeline_emitter(bool is_pipeline_emitter) {
+        this->is_pipeline_emitter = is_pipeline_emitter;
     }
 
     void set_is_pipeline_stage(bool is_pipeline_stage) {
@@ -69,6 +76,26 @@ public:
 
     void set_is_farm_worker(bool is_farm_worker) {
         this->is_farm_worker = is_farm_worker;
+    }
+
+    void set_is_farm_emitter(bool is_farm_emitter) {
+        this->is_farm_emitter = is_farm_emitter;
+    }
+
+    void set_farm_node(Node *farm_node) {
+        this->farm_node = farm_node;
+    }
+
+    void set_pipeline_node(Node *pipeline_node) {
+        this->pipeline_node = pipeline_node;
+    }
+
+    Node *get_farm_node() {
+        return this->farm_node;
+    }
+
+    Node *get_pipeline_node() {
+        return this->pipeline_node;
     }
 
     static void *thread_function(void *args) {
@@ -84,7 +111,22 @@ public:
         Queue<void*> *cq = node->get_output_queue();
 
         while (true) {
-            if (node->is_emitter) {
+            if (node->is_farm_emitter) {
+                void *result = node->run(nullptr);
+                if (result == nullptr) {
+                    std::cout << "Farm emitter output null result (EOS)" << std::endl;
+                    // Push EOS for each worker
+                    std::cout << "Farm Nodes: " << node->get_farm_node()->num_farm_worker_nodes << std::endl;
+                    for (int i = 0; i < node->get_farm_node()->num_farm_worker_nodes; i++) {
+                        cq->push(nullptr);
+                        std:: cout << "Farm Emitter pushing EOS to worker " << i << std::endl;
+                    }
+                    break;
+                }
+                cq->push(result);
+                continue;
+            }
+            if (node->is_pipeline_emitter) {
                 void *result = node->run(nullptr);
                 if (result == nullptr) {
                     std::cout << "Emitter output null result (EOS)" << std::endl;
@@ -108,6 +150,10 @@ public:
                 if (node->is_pipeline_stage) {
                     // Make sure that the EOS is pushed to the output queue so that the next stage can receive it
                     cq->push(task);
+                } else if (node->is_farm_worker) {
+                    // Push EOS to collector
+                    cq->push(task);
+                    std::cout << "Worker " << pthread_self() << " pushing EOS to collector" << std::endl;
                 }
                 break;
             }

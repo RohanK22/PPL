@@ -12,7 +12,7 @@ public:
         this->num_tasks = num_tasks;
 
         // Set as emitter
-        this->set_is_emitter(true);
+        this->set_is_pipeline_emitter(true);
     }
 
     void* run(void*) override {
