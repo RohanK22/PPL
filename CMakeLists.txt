@@ -4,17 +4,14 @@ project(ppl)
 set(CMAKE_CXX_STANDARD 23)
 
 add_executable(ppl
-        Task.hpp
         Queue.hpp
         FarmManager.hpp
         SequentialManager.hpp
         Timer.hpp
         PipelineManager.hpp
         Node.hpp
-        thread_args.cpp
-        thread_args.hpp
         EOS.cpp
         EOS.hpp
-#        Examples/farm_test.cpp
-        Examples/pipeline_test2.cpp
+        Examples/farm_test.cpp
+#        Examples/pipeline_test2.cpp
 )

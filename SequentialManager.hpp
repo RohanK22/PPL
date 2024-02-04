@@ -9,7 +9,6 @@
 // Assuming the tasks are still passed through a queue
 
 #include "Queue.hpp"
-#include "Task.hpp"
 
 template <typename T>
 class SequentialManager {

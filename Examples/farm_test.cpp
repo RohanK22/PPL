@@ -1,14 +1,8 @@
 // A simple farm example where each worker computes a factorial of a number
 #include <iostream>
-#include "../Task.hpp"
 #include "../FarmManager.hpp"
-#include "../Queue.hpp"
-#include "../SequentialManager.hpp"
 #include "../Timer.hpp"
-#include "../PipelineManager.hpp"
-#include <vector>
 #include <algorithm>
-#include "../Node.hpp"
 
 using namespace std;
 

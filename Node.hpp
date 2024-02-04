@@ -7,7 +7,6 @@
 #define PPL_NODE_HPP
 
 #include "Queue.hpp"
-#include "thread_args.hpp"
 
 class Node {
 private:

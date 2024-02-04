@@ -10,8 +10,8 @@ template <typename T>
 class Queue {
 private:
     std::queue<T> q;
-    pthread_mutex_t mutex{};
-    pthread_cond_t non_empty_queue_cond{};
+    pthread_mutex_t mutex;
+    pthread_cond_t non_empty_queue_cond;
 public:
     Queue() {
         pthread_mutex_init(&mutex, nullptr);
@@ -51,13 +51,6 @@ public:
         q.pop();
         pthread_mutex_unlock(&mutex);
         return true;
-    }
-
-    [[maybe_unused]] bool empty() {
-        pthread_mutex_lock(&mutex);
-        bool isEmpty = q.empty();
-        pthread_mutex_unlock(&mutex);
-        return isEmpty;
     }
 
     ~Queue() {

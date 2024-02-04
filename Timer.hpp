@@ -20,7 +20,7 @@ private:
     steady_clock::time_point stop_time;
     bool is_running;
     duration<double> elapsed_time;
-    pthread_mutex_t timer_mutex{};
+    pthread_mutex_t timer_mutex;
 
 public:
     Timer() {
