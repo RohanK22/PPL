@@ -48,7 +48,7 @@ private:
 class FactorialCollector: public Node  {
 public:
     void* run(void* task) override {
-        std::cout << "Collector received task " << receive_count << std::endl;
+        std::cout << "Collector received taskr " << receive_count << std::endl;
         long long *num = (long long *) task;
         std::cout << "Factorial is " << *num << std::endl;
         receive_count++;

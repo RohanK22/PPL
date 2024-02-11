@@ -20,6 +20,9 @@ private:
     bool is_pipeline_stage;
     bool is_farm_worker;
     bool is_farm_emitter;
+    bool is_farm_collector;
+
+    int collector_EOS_count;
 
 protected:
     Node *farm_node;
@@ -81,6 +84,10 @@ public:
         this->is_farm_emitter = is_farm_emitter;
     }
 
+    void set_is_farm_collector(bool is_farm_collector) {
+        this->is_farm_collector = is_farm_collector;
+    }
+
     void set_farm_node(Node *farm_node) {
         this->farm_node = farm_node;
     }
@@ -115,17 +122,14 @@ public:
                 if (result == nullptr) {
                     std::cout << "Farm emitter output null result (EOS)" << std::endl;
                     // Push EOS for each worker
-                    std::cout << "Farm Nodes: " << node->get_farm_node()->num_farm_worker_nodes << std::endl;
                     for (int i = 0; i < node->get_farm_node()->num_farm_worker_nodes; i++) {
                         cq->push(nullptr);
-                        std:: cout << "Farm Emitter pushing EOS to worker " << i << std::endl;
                     }
                     break;
                 }
                 cq->push(result);
                 continue;
-            }
-            if (node->is_pipeline_emitter) {
+            } else if (node->is_pipeline_emitter) {
                 void *result = node->run(nullptr);
                 if (result == nullptr) {
                     std::cout << "Emitter output null result (EOS)" << std::endl;
@@ -145,14 +149,24 @@ public:
             }
 
             if (task == nullptr) {
-                std::cout << "Thread " << pthread_self() << " received EOS " << std::endl;
-                if (node->is_pipeline_stage) {
+                if (node->is_farm_collector) {
+                    node->collector_EOS_count++;
+                    std::cout << "Collector received EOS " << node->collector_EOS_count << std::endl;
+                    if (node->collector_EOS_count == node->get_farm_node()->num_farm_worker_nodes) {
+                        std::cout << "Collector received EOS from all workers" << std::endl;
+                        cq->push(nullptr);
+                        break;
+                    }
+                    continue;
+                } else if (node->is_pipeline_stage) {
                     // Make sure that the EOS is pushed to the output queue so that the next stage can receive it
                     cq->push(task);
                 } else if (node->is_farm_worker) {
                     // Push EOS to collector
                     cq->push(task);
                     std::cout << "Worker " << pthread_self() << " pushing EOS to collector" << std::endl;
+                } else {
+                    std::cout << "Thread " << pthread_self() << " pushing EOS " << std::endl;
                 }
                 break;
             }

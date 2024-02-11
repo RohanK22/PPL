@@ -31,6 +31,7 @@ public:
     void add_collector(Node *node) {
         node->set_output_queue(this->get_output_queue());
         node->set_farm_node(this);
+        node->set_is_farm_collector(true);
         this->collector_node = node;
     }
 

@@ -1,0 +1,209 @@
+#include <iostream>
+#include <cmath>
+#include "../Node.hpp"
+#include "../FarmManager.hpp"
+#include "../EasyBMP.hpp"
+
+using namespace std;
+using namespace EasyBMP;
+
+class MandelbrotChunk {
+public:
+    int startRow;
+    int endRow;
+    int startCol;
+    int endCol;
+    int width;
+    int height;
+    double minReal;
+    double maxReal;
+    double minImag;
+    double maxImag;
+    int maxIterations;
+
+    // EasyBMP::RGBColor
+
+    EasyBMP::Image *finalImage;
+
+    MandelbrotChunk(int startRow, int endRow, int startCol, int endCol, int width, int height,
+                    double minReal, double maxReal, double minImag, double maxImag, int maxIterations, EasyBMP::Image *f)
+            : startRow(startRow), endRow(endRow), startCol(startCol), endCol(endCol),
+              width(width), height(height), minReal(minReal), maxReal(maxReal),
+              minImag(minImag), maxImag(maxImag), maxIterations(maxIterations), finalImage(f) {}
+
+    EasyBMP::Image *computeChunk() const {
+        EasyBMP::Image *image = new EasyBMP::Image(width, height, EasyBMP::RGBColor(255, 255, 255));
+
+        for (int x = startCol; x < endCol; x++) {
+            for (int y = startRow; y < endRow; y++) {
+                double real = minReal + x * (maxReal - minReal) / width;
+                double imag = minImag + y * (maxImag - minImag) / height;
+
+                double zReal = real;
+                double zImag = imag;
+
+                int n;
+                for (n = 0; n < maxIterations; n++) {
+                    double zReal2 = zReal * zReal - zImag * zImag;
+                    double zImag2 = 2 * zReal * zImag;
+
+                    zReal = zReal2 + real;
+                    zImag = zImag2 + imag;
+
+                    if (zReal * zReal + zImag * zImag > 4) {
+                        break;
+                    }
+                }
+
+                // Map the iteration count to a color gradient based on the logarithm of the magnitude
+                int red = static_cast<int>(255 * n / static_cast<double>(maxIterations));
+                int green = static_cast<int>(255 * (1 - n / static_cast<double>(maxIterations)));
+                int blue = static_cast<int>(255 * n / static_cast<double>(maxIterations));
+
+                image->SetPixel(x, y, EasyBMP::RGBColor(red, green, blue));
+            }
+        }
+
+        return image;
+    }
+};
+
+class MandelbrotEmitter : public Node {
+public:
+    MandelbrotEmitter(int width, int height, int numRowChunks, int numColChunks, int maxIterations,
+                      double minReal, double maxReal, double minImag, double maxImag, EasyBMP::Image *f)
+            : width(width), height(height), numRowChunks(numRowChunks), numColChunks(numColChunks),
+              maxIterations(maxIterations), minReal(minReal), maxReal(maxReal), minImag(minImag), maxImag(maxImag),
+              finalImage(f) {}
+
+    void* run(void* task) override {
+        int rowsPerChunk = height / numRowChunks;
+        int colsPerChunk = width / numColChunks;
+
+        for (int i = 0; i < numRowChunks; i++) {
+            for (int j = 0; j < numColChunks; j++) {
+                int startRow = i * rowsPerChunk;
+                int endRow = (i == numRowChunks - 1) ? height : startRow + rowsPerChunk;
+                int startCol = j * colsPerChunk;
+                int endCol = (j == numColChunks - 1) ? width : startCol + colsPerChunk;
+
+                MandelbrotChunk* chunk = new MandelbrotChunk(startRow, endRow, startCol, endCol, width, height,
+                                                             minReal, maxReal, minImag, maxImag, maxIterations, finalImage);
+                this->get_output_queue()->push((void*)chunk);
+            }
+        }
+
+        return nullptr;
+    }
+
+private:
+    int width;
+    int height;
+    int numRowChunks;
+    int numColChunks;
+    int maxIterations;
+    double minReal;
+    double maxReal;
+    double minImag;
+    double maxImag;
+    EasyBMP::Image *finalImage;
+};
+
+class MandelbrotWorker : public Node {
+public:
+    void* run(void* task) override {
+        cout << "Worker received chunk" << endl;
+        MandelbrotChunk* chunk = (MandelbrotChunk*)task;
+
+        EasyBMP::Image *image = chunk->computeChunk();
+        // Save chunk
+        string filename = "temp_" + to_string(chunk->startCol) + "_" + to_string(chunk->startRow) + ".bmp";
+        image->Write(filename.c_str());
+
+        chunk->finalImage->Write("final.bmp");
+
+        return (void*)chunk;
+    }
+
+private:
+    double minReal;
+    double maxReal;
+    double minImag;
+    double maxImag;
+};
+
+class MandelbrotCollector : public Node {
+public:
+    MandelbrotCollector(int totalWidth, int totalHeight, const string& image_path)
+            : totalWidth(totalWidth), totalHeight(totalHeight), image_path(image_path),
+              finalImage(totalWidth, totalHeight, EasyBMP::RGBColor(255, 255, 255)) {}
+
+    void* run(void* task) override {
+        MandelbrotChunk* chunk = (MandelbrotChunk*)task;
+
+        int width = chunk->width;
+        int height = chunk->height;
+
+        int rows = width / (chunk->endRow - chunk->startRow);
+        int cols = height / (chunk->endCol - chunk->startCol);
+
+        cout << "Collector received chunk" << endl;
+
+        EasyBMP::Image *chunkImage = chunk->computeChunk();
+        for (int x = chunk->startCol; x < chunk->endCol; x++) {
+            for (int y = chunk->startRow; y < chunk->endRow; y++) {
+                finalImage.SetPixel(x, y, chunkImage->GetPixel(x, y));
+            }
+        }
+
+        if (received == rows * cols) {
+            cout << "Saving image to " << image_path << endl;
+            finalImage.Write(image_path);
+        } else {
+            received++;
+        }
+
+        return nullptr;
+    }
+
+private:
+    int totalWidth;
+    int totalHeight;
+    string image_path;
+    EasyBMP::Image finalImage;
+    int received = 0;
+};
+
+int main() {
+    int width = 1200;
+    int height = 800;
+    int maxIterations = 1000;
+    double minReal = -2;
+    double maxReal = 1;
+    double minImag = -1;
+    double maxImag = 1;
+    int numRowChunks = 4 * 3;
+    int numColChunks = 4 * 3;
+    int numWorkers = 8;
+
+    string fname = "./mandelbrot_" + to_string(width) + "x" + to_string(height) + ".bmp";
+
+    EasyBMP::Image *finalImage = new EasyBMP::Image(width, height, EasyBMP::RGBColor(255, 255, 255));
+
+    FarmManager *farm = new FarmManager();
+    MandelbrotEmitter *emitter = new MandelbrotEmitter(width, height, numRowChunks, numColChunks,
+                                                       maxIterations, minReal, maxReal, minImag, maxImag, finalImage);
+    MandelbrotCollector *collector = new MandelbrotCollector(width, height, fname);
+
+    farm->add_emitter(emitter);
+    farm->add_collector(collector);
+
+    for (int i = 0; i < numWorkers; i++) {
+        MandelbrotWorker *worker = new MandelbrotWorker();
+        farm->add_worker(worker);
+    }
+
+    farm->run(nullptr);
+    return 0;
+}
+
