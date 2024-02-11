@@ -72,6 +72,11 @@ namespace EasyBMP
             return x >= 0 and y >= 0 and x < width and y < height;
         }
 
+        // Custom modifications START
+        int64_t TellWidth();
+        int64_t TellHeight();
+        // Custom modifications END
+
     private:
         void Init(int64_t _width, int64_t _height);
         void Setup();
@@ -466,6 +471,17 @@ namespace EasyBMP
 
         inFile.close();
     }
+
+    // Custom modifications START
+    int64_t Image::TellWidth() {
+        return width;
+    }
+
+    int64_t Image::TellHeight() {
+        return height;
+    }
+
+    // Custom modifications END
 }
 
 #endif

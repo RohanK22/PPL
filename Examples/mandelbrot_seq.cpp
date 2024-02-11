@@ -43,7 +43,7 @@ public:
                     }
                 }
 
-                int f = 2.05;
+                float f = 2.05;
                 int red = (n) % 256;
                 int green = int(n * f) % 256;
                 int blue = int(n * f * f) % 256;

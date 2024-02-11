@@ -14,10 +14,16 @@ set(COMMON_SOURCES
         EasyBMP.hpp
 )
 
-# Executable target: ppl
-add_executable(ppl
+# Executable target: julia
+add_executable(julia
         ${COMMON_SOURCES}
-        Examples/mandelbrot.cpp
+        Examples/julia.cpp
+)
+
+# Executable target: julia_seq
+add_executable(julia_seq
+        ${COMMON_SOURCES}
+        Examples/julia_seq.cpp
 )
 
 # Executable target: mandelbrot
@@ -32,14 +38,20 @@ add_executable(mandelbrot_seq
         Examples/mandelbrot_seq.cpp
 )
 
-# Executable target: julia_seq
-add_executable(julia_seq
-        ${COMMON_SOURCES}
-        Examples/julia_seq.cpp
-)
-
 # Executable target: pipeline_test
 add_executable(pipeline_test
         ${COMMON_SOURCES}
+        Examples/pipeline_test.cpp
+)
+
+# Executable target: pipeline_test2
+add_executable(pipeline_test2
+        ${COMMON_SOURCES}
         Examples/pipeline_test2.cpp
+)
+
+# Executable target: gaussian_blur
+add_executable(gaussian_blur
+        ${COMMON_SOURCES}
+        Examples/gaussian_blur.cpp
 )

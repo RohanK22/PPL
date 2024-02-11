@@ -34,7 +34,7 @@ public:
                         break;
                     }
                 }
-                int f = 2.05;
+                float f = 2.05;
                 int red = (n) % 256;
                 int green = int(n * f) % 256;
                 int blue = int(n * f * f) % 256;
@@ -68,7 +68,7 @@ private:
 int main() {
     int w = 1200 * 16;
     int h = 800 * 16;
-    string fname = "julia_set_" + to_string(w) + "x" + to_string(h) + ".bmp";
+    string fname = "julia_seq_" + to_string(w) + "x" + to_string(h) + ".bmp";
 
     // Specify the Julia constant (you can experiment with different values)
     double cReal = -0.7;
