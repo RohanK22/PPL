@@ -96,13 +96,15 @@ public:
 
         cout << "Writing image to " << output_path << endl;
 
-        image->Write(output_path.c_str());
+        image->Write(output_path.c_str() + to_string(receive_count) + ".bmp");
         delete image;  // Clean up memory
+        receive_count++;
         return nullptr;
     }
 
 private:
     string output_path;
+    int receive_count = 0;
 };
 
 int main(int argc, char* argv[]) {
