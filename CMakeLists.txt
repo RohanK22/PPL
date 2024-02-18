@@ -55,3 +55,7 @@ add_executable(gaussian_blur
         ${COMMON_SOURCES}
         Examples/gaussian_blur.cpp
 )
+add_executable(mpi_hello_world
+        mpi_hello_world.cpp
+)
+include_directories(/opt/homebrew/Cellar/boost/1.84.0/include/boost)

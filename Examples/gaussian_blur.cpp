@@ -1,23 +1,31 @@
 #include <iostream>
 #include "../PipelineManager.hpp"
 #include "../EasyBMP.hpp"
+#include <filesystem>
 
 using namespace std;
+using namespace EasyBMP;
+namespace fs = std::filesystem;
 
 class ImageReader : public Node {
 public:
-    ImageReader(const string& image_path) : image_path(image_path) {
+    ImageReader(const string& folder_path) : folder_path(folder_path) {
         this->set_is_pipeline_emitter(true);
     }
 
     void* run(void*) override {
-        EasyBMP::Image* image = new EasyBMP::Image(image_path.c_str());
-        this->get_output_queue()->push(static_cast<void*>(image));
+        // Iterate through the images in the specified folder
+        for (const auto& entry : fs::directory_iterator(folder_path)) {
+            string image_path = entry.path().string();
+            EasyBMP::Image* image = new EasyBMP::Image(image_path.c_str());
+            this->get_output_queue()->push(static_cast<void*>(image));
+        }
+
         return nullptr;
     }
 
 private:
-    string image_path;
+    string folder_path;
 };
 
 class GrayscaleConverter : public Node {
