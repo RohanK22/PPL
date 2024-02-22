@@ -120,7 +120,7 @@ public:
             if (node->is_farm_emitter) {
                 void *result = node->run(nullptr);
                 if (result == nullptr) {
-                    std::cout << "Farm emitter output null result (EOS)" << std::endl;
+//                    std::cout << "Farm emitter output null result (EOS)" << std::endl;
                     // Push EOS for each worker
                     for (int i = 0; i < node->get_farm_node()->num_farm_worker_nodes; i++) {
                         cq->push(nullptr);
@@ -132,7 +132,7 @@ public:
             } else if (node->is_pipeline_emitter) {
                 void *result = node->run(nullptr);
                 if (result == nullptr) {
-                    std::cout << "Emitter output null result (EOS)" << std::endl;
+//                    std::cout << "Emitter output null result (EOS)" << std::endl;
                     cq->push(nullptr);
                     break;
                 }
@@ -151,9 +151,9 @@ public:
             if (task == nullptr) {
                 if (node->is_farm_collector) {
                     node->collector_EOS_count++;
-                    std::cout << "Collector received EOS " << node->collector_EOS_count << std::endl;
+//                    std::cout << "Collector received EOS " << node->collector_EOS_count << std::endl;
                     if (node->collector_EOS_count == node->get_farm_node()->num_farm_worker_nodes) {
-                        std::cout << "Collector received EOS from all workers" << std::endl;
+//                        std::cout << "Collector received EOS from all workers" << std::endl;
                         cq->push(nullptr);
                         break;
                     }
@@ -164,9 +164,9 @@ public:
                 } else if (node->is_farm_worker) {
                     // Push EOS to collector
                     cq->push(task);
-                    std::cout << "Worker " << pthread_self() << " pushing EOS to collector" << std::endl;
+//                    std::cout << "Worker " << pthread_self() << " pushing EOS to collector" << std::endl;
                 } else {
-                    std::cout << "Thread " << pthread_self() << " pushing EOS " << std::endl;
+//                    std::cout << "Thread " << pthread_self() << " pushing EOS " << std::endl;
                 }
                 break;
             }

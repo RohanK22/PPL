@@ -76,3 +76,5 @@ fabric.properties
 
 ### CMake template
 cmake-build-debug/
+
+Examples/*.bmp

@@ -55,12 +55,12 @@ public:
     }
 
     void* run(void *task) {
-        std::cout << "Emitter input queue: " << emitter_node->get_input_queue() << std::endl;
-        std::cout << "Emitter output queue: " << emitter_node->get_output_queue() << std::endl;
-        std::cout << "Worker 1 input queue: " << worker_nodes[0]->get_input_queue() << std::endl;
-        std::cout << "Worker 1 output queue: " << worker_nodes[0]->get_output_queue() << std::endl;
-        std::cout << "Collector input queue: " << collector_node->get_input_queue() << std::endl;
-        std::cout << "Collector output queue: " << collector_node->get_output_queue() << std::endl;
+//        std::cout << "Emitter input queue: " << emitter_node->get_input_queue() << std::endl;
+//        std::cout << "Emitter output queue: " << emitter_node->get_output_queue() << std::endl;
+//        std::cout << "Worker 1 input queue: " << worker_nodes[0]->get_input_queue() << std::endl;
+//        std::cout << "Worker 1 output queue: " << worker_nodes[0]->get_output_queue() << std::endl;
+//        std::cout << "Collector input queue: " << collector_node->get_input_queue() << std::endl;
+//        std::cout << "Collector output queue: " << collector_node->get_output_queue() << std::endl;
 
         // Start nodes
         emitter_node->start_node();

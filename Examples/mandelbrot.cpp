@@ -101,7 +101,7 @@ private:
 class MandelbrotWorker : public Node {
 public:
     void* run(void* task) override {
-        cout << "Worker received chunk" << endl;
+//        cout << "Worker received chunk" << endl;
         MandelbrotChunk* chunk = (MandelbrotChunk*)task;
 
         // Populate the colors in the chunk
@@ -122,7 +122,7 @@ public:
     void* run(void* task) override {
         MandelbrotChunk* chunk = (MandelbrotChunk*)task;
 
-        cout << "Collector received chunk" << endl;
+//        cout << "Collector received chunk" << endl;
 
         // Copy colors from the chunk to the final image
         for (int x = chunk->startCol; x < chunk->endCol; x++) {
@@ -132,10 +132,10 @@ public:
         }
 
         received++;
-        cout << "Progress % " << (received * 100) / numChunks << endl;
+//        cout << "Progress % " << (received * 100) / numChunks << endl;
 
         if (received == numChunks) {
-            cout << "Saving image to " << image_path << endl;
+//            cout << "Saving image to " << image_path << endl;
             finalImage.Write(image_path);
         }
 

@@ -9,13 +9,14 @@ Week 2
 [x] Start measuring some performance improvements
     [x] Time mandelbrot set example
 
-
 Week 5
 [ ] Finish up literature review
 [ ] Modify Chapter 3 based on drafts
-[ ] More examples & Speed up graphs
-[ ] 
+[x] More examples & Speed up graphs
 
+Week 6
+[ ] Nesting patterns
+[ ] Finish up systems level patterns
 
 [ ] Always add the emitter and collector first (Unusual Pattern)
 

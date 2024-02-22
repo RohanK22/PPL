@@ -1,12 +1,11 @@
 
-# Script to plot speedups from farm pattern
+# Script to plot speedups from farm pattern for the mandelbrot problem
 
 # Usage: ./mandelbrot_seq <width> <height> <maxIterations>
 # Usage: ./mandelbrot <width> <height> <maxIterations> <numRowChunks> <numColChunks> <numWorkers>
 
 import matplotlib.pyplot as plt
 import os
-import subprocess
 import time
 
 # EXEC Paths
@@ -15,7 +14,7 @@ SEQ_MANDELBROT_EXEC = os.path.join('../cmake-build-debug', 'mandelbrot_seq')
 
 # Parameters
 SAMPLES = 5
-problem_sizes = [(500, 500, 1000), (800, 800, 1000), (1000, 1000, 1000), (1200, 1200, 1000)]
+problem_sizes = [(1024, 1024, 1000), (2048, 2048, 1000), (4096, 4096, 1000)]
 num_workers_list = [2, 4, 6, 8]
 
 # Function to run Mandelbrot and measure elapsed time
@@ -23,7 +22,6 @@ def run_mandelbrot(exec_path, *args):
     elapsed_times = []
     for _ in range(SAMPLES):
         start_time = time.time()
-        # subprocess.run([exec_path] + list(map(str, args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         os.system(f'{exec_path} {" ".join(map(str, args))} > /dev/null')
         elapsed_time = time.time() - start_time
         elapsed_times.append(elapsed_time)

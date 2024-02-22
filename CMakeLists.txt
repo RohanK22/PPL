@@ -55,7 +55,25 @@ add_executable(gaussian_blur
         ${COMMON_SOURCES}
         Examples/gaussian_blur.cpp
 )
+
+# Executable target: farm_matmul
+add_executable(farm_matmul
+        ${COMMON_SOURCES}
+        Examples/farm_matmul.cpp
+)
+
+# Executable target: seq_matmul
+add_executable(seq_matmul
+        ${COMMON_SOURCES}
+        Examples/seq_matmul.cpp
+)
+
 add_executable(mpi_hello_world
         mpi_hello_world.cpp
 )
-include_directories(/opt/homebrew/Cellar/boost/1.84.0/include/boost)
+
+add_executable(mpi_mat_mul
+        mpi_mat_mul.cpp
+)
+
+include_directories(/opt/homebrew/Cellar/open-mpi/5.0.1/include)

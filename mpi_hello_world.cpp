@@ -1,42 +1,72 @@
+/*
+ *  Let f(i) represent the first four digits
+ *  after the decimal point of sin(i).
+ *
+ *  This program computes:
+ *
+ *          n
+ * g(n) =  sum f(i)
+ *         i=0
+ *
+ *   to four digits for a given n
+ */
+
+#include <math.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <mpi.h>
+#include <assert.h>
 
-using namespace std;
+int nprocs; // number of processes
+int myrank; // rank of this process
 
-int main(int argc, char** argv) {
+#define TAG 99 // TAG that will be used in all messages
+
+/* Computes sum of f(i), where i takes on all the values
+ * start, start+step, start+2*step, ...
+ * that are less than stop.
+ */
+int sum(double start, double stop, double step) {
+    int result = 0;
+
+    for (double x = start; x < stop; x +=step) {
+        double y = fabs(sin(x)); // 0.0<y<1.0
+        int z = (int)(10000.0 * y); // 0<z<1000
+
+        result = (result + z)%10000; // 0<result<1000
+    }
+    return result;
+}
+int main(int argc, char *argv[]) {
+    long stop;
+
     MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    int rank, size;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    if (myrank == 0) {
+        assert(argc==2);
+        stop = atol(argv[1]);
+        assert(stop > 1);
+    }
 
-    // Number of elements in the array
-    int n = 8;
-    int data[n];
+    MPI_Bcast(&stop, 1, MPI_LONG, 0, MPI_COMM_WORLD);
 
-    // Initialize data on the root process
-    if (rank == 0) {
-        for (int i = 0; i < n; i++) {
-            data[i] = i + 1;
+    int result = sum(myrank, (double)stop, (double)nprocs);
+
+    if (myrank == 0) {
+        int buf;
+
+        for (int i=1; i<nprocs; i++) {
+            MPI_Recv(&buf, 1, MPI_INT, i, TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            result = (result + buf)%10000;
         }
+
+        printf("Result: %d\n", result);
+        fflush(stdout);
     }
-
-    // Scatter the data to all processes
-    MPI_Scatter(data, 1, MPI_INT, &data, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-    // Calculate local sum
-    int local_sum = 0;
-    for (int i = 0; i < 1; i++) {
-        local_sum += data[i];
-    }
-
-    // Gather local sums to the root process
-    int global_sum;
-    MPI_Reduce(&local_sum, &global_sum, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-
-    // Print the result on the root process
-    if (rank == 0) {
-        printf("Global Sum: %d\n", global_sum);
+    else {
+        MPI_Send(&result, 1, MPI_INT, 0, TAG, MPI_COMM_WORLD);
     }
 
     MPI_Finalize();
