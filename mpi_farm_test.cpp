@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <unistd.h>
+#include "MPIFarmManager.hpp"
 
 // Example task (modify based on your problem)
 int processTask(int taskData) {

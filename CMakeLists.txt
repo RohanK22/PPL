@@ -12,6 +12,7 @@ set(COMMON_SOURCES
         PipelineManager.hpp
         Node.hpp
         EasyBMP.hpp
+        MPIFarmManager.hpp
 )
 
 # Executable target: julia
@@ -88,6 +89,7 @@ set(Boost_LIBRARIES
 include_directories(${Boost_INCLUDE_DIRS})
 find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
 add_executable(boost_mpi_test
+        ${COMMON_SOURCES}
         boost_mpi_test.cpp
 )
 #mpic++ -I/path/to/boost/mpi my_application.cpp -Llibdir \

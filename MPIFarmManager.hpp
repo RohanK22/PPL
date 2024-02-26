@@ -53,7 +53,7 @@ public:
                 if (result == "EOS") {
                     break;
                 }
-//                collector_callback(result);
+                collector_callback(result);
                 cout << "Collector: " << result << endl;
             }
         } else {
