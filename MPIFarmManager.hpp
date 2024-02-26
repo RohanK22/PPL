@@ -5,66 +5,106 @@
 #include <boost/serialization/vector.hpp>
 #include <vector>
 #include <string>
+#include "MPINode.hpp"
 
 namespace mpi = boost::mpi;
 using namespace std;
 
-class MPIFarmManager {
+class MPIFarmManager : public MPINode {
 public:
     MPIFarmManager(mpi::environment *env, mpi::communicator *world) : env(env), world(world) {}
 
-    void set_emitter_callback(string (*emitter_callback)(string)) {
-        this->emitter_callback = emitter_callback;
+    void add_emitter(MPINode *node) {
+        this->emitter_node = node;
+        node->set_env(env);
+        node->set_world(world);
     }
 
-    void set_worker_callback(string (*worker_callback)(string)) {
-        this->worker_callback = worker_callback;
+    void add_collector(MPINode *node) {
+        this->collector_node = node;
+        node->set_env(env);
+        node->set_world(world);
     }
 
-    void set_collector_callback(string (*collector_callback)(string)) {
-        this->collector_callback = collector_callback;
+    void add_worker(MPINode *node) {
+        this->worker_nodes.push_back(node);
+        node->set_env(env);
+        node->set_world(world);
+        this->num_workers++;
     }
 
-    void run() {
-        // Number of workers is world size minus 3 (master, emitter, collector)
-        num_workers = world->size() - 3;
-        rr_index = 0;
-
+    string run(string _) override {
+        int size = world->size();
         if (world->rank() == 0) {
             // Master Process that manages the farm
+            cout << "Master says hello" << endl;
+            cout << "Number of workers: " << num_workers << endl;
 
-        } else if (world->rank() == 1) {
-            // Emitter Process
+            // Wait response from collector
             while (true) {
-                string task = emitter_callback("");
-                if (task == "EOS") {
+                string response;
+                world->recv(2, 0, response);
+                cout << "Master received response from collector: " << response << endl;
+                if (response == "EOS") {
+                    cout << "Master done" << endl;
                     break;
                 }
+            }
+        } else if (world->rank() == 1) {
+            while(true) {
+                string task = emitter_node->run("");
+                if (task == "EOS") {
+                    cout << "Emitter done" << endl;
 
-                // Send to worker
+                    // Send EOS to workers
+                    for (int i = 0; i < size - 3; i++) {
+                        world->send(i + 3, 0, string("EOS"));
+                    }
+
+                    break;
+                }
+                // Distribute task to worker
                 world->send(rr_index + 3, 0, task);
-                rr_index = (rr_index + 1) % num_workers;
+                rr_index = (rr_index + 1) % (size - 3);
             }
         } else if (world->rank() == 2) {
-            // Collector Process
-            while (true) {
+            int collector_eos_count = 0;
+            while(true) {
                 string result;
                 world->recv(mpi::any_source, 0, result);
+
                 if (result == "EOS") {
+                    collector_eos_count++;
+
+                    if (collector_eos_count == num_workers) {
+                        cout << "Collector done" << endl;
+
+                        // Send EOS to master
+                        world->send(0, 0, string("EOS"));
+                    }
                     break;
                 }
-                collector_callback(result);
-                cout << "Collector: " << result << endl;
+
+                // Process result
+                string response = collector_node->run(result);
+
+                // Send response to master
+                world->send(0, 0, response);
             }
         } else {
-            // Worker Loop
-            while (true) {
+            while(true) {
                 string task;
-                world->recv(0, 0, task);
+                world->recv(1, 0, task);
+                cout << "Emitter sent task " << task << " to worker " << world->rank() << endl;
                 if (task == "EOS") {
+                    cout << "Worker " << world->rank() << " done" << endl;
+
+                    // Send EOS to collector
+                    world->send(2, 0, string("EOS"));
+
                     break;
                 }
-                string result = worker_callback(task);
+                string result = worker_nodes[world->rank() - 3]->run(task);
                 world->send(2, 0, result);
             }
         }
@@ -75,13 +115,13 @@ private:
     mpi::communicator *world;
 
     // Worker function callbacks
-    string (*emitter_callback)(string);
-    string (*worker_callback)(string);
-    string (*collector_callback)(string);
+    MPINode *emitter_node;
+    MPINode *collector_node;
+    vector<MPINode*> worker_nodes;
 
     // Scheduling state
     int num_workers;
-    int rr_index;
+    int rr_index = 0;
 };
 
 #endif //PPL_MPIFARMMANAGER_HPP

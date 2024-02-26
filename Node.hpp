@@ -132,7 +132,6 @@ public:
             } else if (node->is_pipeline_emitter) {
                 void *result = node->run(nullptr);
                 if (result == nullptr) {
-//                    std::cout << "Emitter output null result (EOS)" << std::endl;
                     cq->push(nullptr);
                     break;
                 }

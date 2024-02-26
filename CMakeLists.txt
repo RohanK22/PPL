@@ -3,6 +3,18 @@ project(ppl)
 
 set(CMAKE_CXX_STANDARD 23)
 
+# Boost Config
+set(Boost_INCLUDE_DIRS /Users/rohan/Documents/libs/boost_1_82_0/boost)
+set(Boost_USE_STATIC_LIBS ON)  # If you prefer static linking
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_LIBRARIES
+        /Users/rohan/Documents/libs/boost_1_82_0/lib/libboost_mpi.a
+        /Users/rohan/Documents/libs/boost_1_82_0/lib/libboost_serialization.a
+        # ... other required Boost libraries if needed
+)
+
+
+
 # Common source files
 set(COMMON_SOURCES
         Queue.hpp
@@ -78,24 +90,16 @@ target_link_libraries(mpi_farm_test MPI::MPI_CXX)
 
 
 # Boost MPI test
-set(Boost_INCLUDE_DIRS /Users/rohan/Documents/libs/boost_1_82_0/boost)
-set(Boost_USE_STATIC_LIBS ON)  # If you prefer static linking
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_LIBRARIES
-        /Users/rohan/Documents/libs/boost_1_82_0/lib/libboost_mpi.a
-        /Users/rohan/Documents/libs/boost_1_82_0/lib/libboost_serialization.a
-        # ... other required Boost libraries if needed
-)
 include_directories(${Boost_INCLUDE_DIRS})
 find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
 add_executable(boost_mpi_test
         ${COMMON_SOURCES}
         boost_mpi_test.cpp
 )
-#mpic++ -I/path/to/boost/mpi my_application.cpp -Llibdir \
-#  -lboost_mpi -lboost_serialization
-
 target_link_libraries(boost_mpi_test
         ${Boost_LIBRARIES}
         MPI::MPI_CXX
-        )
+)
+
+#mpic++ -I/path/to/boost/mpi my_application.cpp -Llibdir \
+#  -lboost_mpi -lboost_serialization
