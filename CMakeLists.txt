@@ -68,12 +68,32 @@ add_executable(seq_matmul
         Examples/seq_matmul.cpp
 )
 
-add_executable(mpi_hello_world
-        mpi_hello_world.cpp
-)
-
-add_executable(mpi_mat_mul
-        mpi_mat_mul.cpp
-)
-
 include_directories(/opt/homebrew/Cellar/open-mpi/5.0.1/include)
+find_package(MPI REQUIRED)
+add_executable(mpi_farm_test
+        mpi_farm_test.cpp
+)
+target_link_libraries(mpi_farm_test MPI::MPI_CXX)
+
+
+# Boost MPI test
+set(Boost_INCLUDE_DIRS /Users/rohan/Documents/libs/boost_1_82_0/boost)
+set(Boost_USE_STATIC_LIBS ON)  # If you prefer static linking
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_LIBRARIES
+        /Users/rohan/Documents/libs/boost_1_82_0/lib/libboost_mpi.a
+        /Users/rohan/Documents/libs/boost_1_82_0/lib/libboost_serialization.a
+        # ... other required Boost libraries if needed
+)
+include_directories(${Boost_INCLUDE_DIRS})
+find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
+add_executable(boost_mpi_test
+        boost_mpi_test.cpp
+)
+#mpic++ -I/path/to/boost/mpi my_application.cpp -Llibdir \
+#  -lboost_mpi -lboost_serialization
+
+target_link_libraries(boost_mpi_test
+        ${Boost_LIBRARIES}
+        MPI::MPI_CXX
+        )
