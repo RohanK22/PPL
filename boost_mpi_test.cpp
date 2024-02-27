@@ -16,7 +16,7 @@ public:
     string run(string task) override {
         if (curr == num_tasks) {
             std::cout << "Generator Done" << std::endl;
-            return "EOS";
+            return string("EOS")
         }
         std::cout << "Generated task " << curr << std::endl;
         curr++;

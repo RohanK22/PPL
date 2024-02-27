@@ -10,6 +10,8 @@ License: MIT
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/serialization.hpp>
 
 namespace EasyBMP
 {
@@ -33,6 +35,13 @@ namespace EasyBMP
         uint8_t r;
         uint8_t g;
         uint8_t b;
+
+        template<class Archive>
+        void serialize(Archive &ar, const unsigned int version) {
+            ar & r;
+            ar & g;
+            ar & b;
+        }
     };
 
     RGBColor::RGBColor(uint8_t _r, uint8_t _g, uint8_t _b)

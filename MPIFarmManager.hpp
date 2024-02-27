@@ -16,20 +16,14 @@ public:
 
     void add_emitter(MPINode *node) {
         this->emitter_node = node;
-        node->set_env(env);
-        node->set_world(world);
     }
 
     void add_collector(MPINode *node) {
         this->collector_node = node;
-        node->set_env(env);
-        node->set_world(world);
     }
 
     void add_worker(MPINode *node) {
         this->worker_nodes.push_back(node);
-        node->set_env(env);
-        node->set_world(world);
         this->num_workers++;
     }
 
@@ -59,6 +53,7 @@ public:
                     // Send EOS to workers
                     for (int i = 0; i < size - 3; i++) {
                         world->send(i + 3, 0, string("EOS"));
+                        cout << "Sending worker " << to_string(i + 3) << " EOS" << endl;
                     }
 
                     break;
@@ -95,7 +90,7 @@ public:
             while(true) {
                 string task;
                 world->recv(1, 0, task);
-                cout << "Emitter sent task " << task << " to worker " << world->rank() << endl;
+//                cout << "Emitter sent task " << task << " to worker " << world->rank() << endl;
                 if (task == "EOS") {
                     cout << "Worker " << world->rank() << " done" << endl;
 

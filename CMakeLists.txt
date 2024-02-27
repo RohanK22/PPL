@@ -101,5 +101,19 @@ target_link_libraries(boost_mpi_test
         MPI::MPI_CXX
 )
 
+# MPI Examples
+# Mandelbrot
+include_directories(${Boost_INCLUDE_DIRS})
+find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
+add_executable(mpi_mandelbrot
+        ${COMMON_SOURCES}
+        MPI_Examples/mandelbrot.cpp
+)
+target_link_libraries(mpi_mandelbrot
+        ${Boost_LIBRARIES}
+        MPI::MPI_CXX
+)
+
+
 #mpic++ -I/path/to/boost/mpi my_application.cpp -Llibdir \
 #  -lboost_mpi -lboost_serialization
