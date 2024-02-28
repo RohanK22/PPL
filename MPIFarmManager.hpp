@@ -50,7 +50,7 @@ public:
                 if (task == "EOS") {
                     cout << "Emitter done" << endl;
 
-                    // Send EOS to workers
+//                     Send EOS to workers
                     for (int i = 0; i < size - 3; i++) {
                         world->send(i + 3, 0, string("EOS"));
                         cout << "Sending worker " << to_string(i + 3) << " EOS" << endl;
@@ -71,13 +71,17 @@ public:
                 if (result == "EOS") {
                     collector_eos_count++;
 
+                    cout << "Collector got " << to_string(collector_eos_count) << " EOS counts out of " << to_string(num_workers) << endl;
+
                     if (collector_eos_count == num_workers) {
                         cout << "Collector done" << endl;
 
                         // Send EOS to master
                         world->send(0, 0, string("EOS"));
+
+                        break;
                     }
-                    break;
+                    continue; // Wait for more EOS
                 }
 
                 // Process result
