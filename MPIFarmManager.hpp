@@ -11,6 +11,19 @@ namespace mpi = boost::mpi;
 using namespace std;
 
 class MPIFarmManager : public MPINode {
+private:
+    mpi::environment *env;
+    mpi::communicator *world;
+
+    // Worker function callbacks
+    MPINode *emitter_node;
+    MPINode *collector_node;
+    vector<MPINode*> worker_nodes;
+
+    // Scheduling state
+    int num_workers;
+    int rr_index = 0;
+
 public:
     MPIFarmManager(mpi::environment *env, mpi::communicator *world) : env(env), world(world) {}
 
@@ -34,7 +47,7 @@ public:
             cout << "Master says hello" << endl;
             cout << "Number of workers: " << num_workers << endl;
 
-            // Wait response from collector
+            // Wait for response from collector
             while (true) {
                 string response;
                 world->recv(2, 0, response);
@@ -108,19 +121,6 @@ public:
             }
         }
     }
-
-private:
-    mpi::environment *env;
-    mpi::communicator *world;
-
-    // Worker function callbacks
-    MPINode *emitter_node;
-    MPINode *collector_node;
-    vector<MPINode*> worker_nodes;
-
-    // Scheduling state
-    int num_workers;
-    int rr_index = 0;
 };
 
 #endif //PPL_MPIFARMMANAGER_HPP

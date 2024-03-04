@@ -4,7 +4,6 @@
 #include "../MPIFarmManager.hpp"
 #include "../EasyBMP.hpp"
 #include <boost/mpi.hpp>
-#include <boost/serialization/vector.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <sstream>
@@ -227,13 +226,6 @@ int main(int argc, char* argv[]) {
     int maxIterations = stoi(argv[3]);
     int numRowChunks = stoi(argv[4]);
     int numColChunks = stoi(argv[5]);
-
-//    int width = 1200;
-//    int height = 800;
-//    int maxIterations = 1000;
-//    int numRowChunks = 4 * 3;
-//    int numColChunks = 4 * 3;
-//    int numWorkers = 8;
 
     string fname = "mandelbrot_" + to_string(width) + "x" + to_string(height) + ".bmp";
 
