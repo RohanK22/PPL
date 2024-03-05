@@ -58,10 +58,10 @@ add_executable(pipeline_test
         Examples/pipeline_test.cpp
 )
 
-# Executable target: pipeline_test2
-add_executable(pipeline_test2
+# Executable target: pipeline_text_processing
+add_executable(pipeline_text_processing
         ${COMMON_SOURCES}
-        Examples/pipeline_test2.cpp
+        Examples/pipeline_text_processing.cpp
 )
 
 # Executable target: gaussian_blur
@@ -82,12 +82,19 @@ add_executable(seq_matmul
         Examples/seq_matmul.cpp
 )
 
+# Nested Farm in Pipeline
+# nexted_farm_in_pipeline_gaussian_blur
+add_executable(nested_farm_in_pipeline_gaussian_blur
+        ${COMMON_SOURCES}
+        Examples/nested_farm_in_pipeline_gaussian_blur.cpp
+)
+
 # Boost MPI test
 include_directories(${Boost_INCLUDE_DIRS})
 find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
 add_executable(boost_mpi_test
         ${COMMON_SOURCES}
-        boost_mpi_test.cpp
+        MPI_Examples/boost_mpi_test.cpp
 )
 target_link_libraries(boost_mpi_test
         ${Boost_LIBRARIES}

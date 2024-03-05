@@ -53,6 +53,6 @@ int main() {
 
     std::cout << "Number of stages: " << pipeline->get_num_pipeline_stages() << std::endl;
 
-    pipeline->run(nullptr);
+    pipeline->run_until_finish();
     return 0;
 }

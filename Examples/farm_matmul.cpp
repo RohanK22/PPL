@@ -145,7 +145,7 @@ int main(int argc, char *argv[]) {
         farm->add_worker(worker);
     }
 
-    farm->run(nullptr);
+    farm->run_until_finish();
 
     auto t2 = chrono::high_resolution_clock::now();
 

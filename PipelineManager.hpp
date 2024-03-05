@@ -12,9 +12,14 @@
 class PipelineManager : public Node {
 private:
     std::vector<Node*> pipeline_nodes;
+    unsigned int num_pipeline_stages;
+    pthread_t thread;
+    bool is_nested_node = true;
 
 public:
-    PipelineManager() = default;
+    PipelineManager() {
+        this->is_pipeline = true;
+    }
 
     unsigned int get_num_pipeline_stages() {
         return this->num_pipeline_stages;
@@ -24,44 +29,69 @@ public:
     void add_stage(Node *node) {
         node->set_is_pipeline_stage(true);
         pipeline_nodes.push_back(node);
-
-        // Connect the node
-        if (pipeline_nodes.size() == 1) {
-            pipeline_nodes[0]->set_input_queue(this->get_input_queue());
-            pipeline_nodes[0]->set_output_queue(this->get_output_queue());
-        } else {
-            // TODO: Warning: There is a slight memory leak here
-            Queue<void*> *new_queue = new Queue<void*>();
-            pipeline_nodes[pipeline_nodes.size() - 2]->set_output_queue(new_queue);
-            pipeline_nodes.back()->set_input_queue(new_queue);
-            pipeline_nodes.back()->set_output_queue(this->get_output_queue());
-        }
-
         this->num_pipeline_stages = pipeline_nodes.size();
     }
 
-    void* run(void *task) {
-//        std::cout << "Node 1 input queue: " << pipeline_nodes[0]->get_input_queue() << std::endl;
-//        std::cout << "Node 1 output queue: " << pipeline_nodes[0]->get_output_queue() << std::endl;
-//        std::cout << "Node 2 input queue: " << pipeline_nodes[1]->get_input_queue() << std::endl;
-//        std::cout << "Node 2 output queue: " << pipeline_nodes[1]->get_output_queue() << std::endl;
-//        std::cout << "Node 3 input queue: " << pipeline_nodes[2]->get_input_queue() << std::endl;
-//        std::cout << "Node 3 output queue: " << pipeline_nodes[2]->get_output_queue() << std::endl;
-
-        if (this->num_pipeline_stages < 1) {
-            throw std::runtime_error("Pipeline must have at least one stage");
-        }
-
-        // Start node
-        for (int i = 0; i < num_pipeline_stages; i ++) {
-            pipeline_nodes[i]->start_node();
-        }
-
-        // join threads
-        for (int i = 0; i < num_pipeline_stages; i++) {
-            pipeline_nodes[i]->join_node();
+    // If the pipeline is a nested node we need to have a separate thread that receives and sends tasks to the stages
+    void *thread_function(void *args) override {
+        std::cout << "PipelineManager thread function " << std::endl;
+        while (true) {
+            void *task = nullptr;
+            bool success = this->get_input_queue()->try_pop(task);
+            if (!success) {
+                continue;
+            }
+            if (task == nullptr) {
+                std::cout << "EOS for Pipe node" << std::endl;
+                break;
+            }
+            pipeline_nodes[0]->get_input_queue()->push(task);
         }
         return nullptr;
+    }
+
+    static void* thread_function_helper(void *context) {
+        return static_cast<PipelineManager*>(context)->thread_function(nullptr);
+    }
+
+    void start_node() override {
+        // Start node
+        for (int i = 0; i < num_pipeline_stages; i ++) {
+            if (i == 0) {
+                pipeline_nodes[i]->set_input_queue(this->get_input_queue());
+            } else {
+                pipeline_nodes[i]->set_input_queue(pipeline_nodes[i - 1]->get_output_queue());
+            }
+            pipeline_nodes[i]->start_node();
+        }
+        if (is_nested_node) {
+            pthread_create(&this->thread, nullptr, &PipelineManager::thread_function_helper, this);
+        }
+    }
+
+    void join_node() override {
+        // Join node
+        for (int i = 0; i < num_pipeline_stages; i ++) {
+            pipeline_nodes[i]->join_node();
+        }
+        if (is_nested_node) {
+            pthread_join(this->thread, nullptr);
+        }
+    }
+
+    // Should never be called
+    void* run(void *task) override {
+        throw std::runtime_error("PipelineManager run should never be called");
+    }
+
+    void run_until_finish() {
+        this->is_nested_node = false;
+
+        // Start the pipeline
+        this->start_node();
+
+        // Join the pipeline
+        this->join_node();
     }
 };
 

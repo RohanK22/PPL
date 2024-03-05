@@ -15,7 +15,6 @@ private:
     Queue<void*> *output_queue;
 
     bool is_pipeline_emitter;
-    bool is_farm;
     bool is_pipline;
     bool is_pipeline_stage;
     bool is_farm_worker;
@@ -30,6 +29,9 @@ protected:
     Node *pipeline_node;
     unsigned int num_pipeline_stages;
 
+    bool is_farm; // Is set to true if the node is a FarmManager
+    bool is_pipeline; // Is set to true if the node is a PipelineManager
+
 public:
     // Constructor
     Node() {
@@ -42,6 +44,14 @@ public:
     Node(Queue<void*> *iq, Queue<void*> *oq) {
         this->input_queue = iq;
         this->output_queue = oq;
+    }
+
+    bool get_is_farm() {
+        return this->is_farm;
+    }
+
+    bool get_is_pipeline() {
+        return this->is_pipline;
     }
 
     void set_input_queue(Queue<void*> *iq){
@@ -58,14 +68,6 @@ public:
 
     Queue<void*> *get_output_queue() {
         return this->output_queue;
-    }
-
-    void set_is_farm(bool is_farm) {
-        this->is_farm = is_farm;
-    }
-
-    void set_is_pipeline(bool is_pipeline) {
-        this->is_pipline = is_pipeline;
     }
 
     void set_is_pipeline_emitter(bool is_pipeline_emitter) {
@@ -92,10 +94,6 @@ public:
         this->farm_node = farm_node;
     }
 
-    void set_pipeline_node(Node *pipeline_node) {
-        this->pipeline_node = pipeline_node;
-    }
-
     Node *get_farm_node() {
         return this->farm_node;
     }
@@ -104,7 +102,7 @@ public:
         return this->pipeline_node;
     }
 
-    static void *thread_function(void *args) {
+    virtual void *thread_function(void *args) {
         // Get the arguments
         Node *node = static_cast<Node*>(args);
 
@@ -159,13 +157,13 @@ public:
                     continue;
                 } else if (node->is_pipeline_stage) {
                     // Make sure that the EOS is pushed to the output queue so that the next stage can receive it
+                    std::cout << "Stage received EOS" << std::endl;
                     cq->push(task);
+                    break;
                 } else if (node->is_farm_worker) {
                     // Push EOS to collector
                     cq->push(task);
-//                    std::cout << "Worker " << pthread_self() << " pushing EOS to collector" << std::endl;
-                } else {
-//                    std::cout << "Thread " << pthread_self() << " pushing EOS " << std::endl;
+                    std::cout << "Worker " << pthread_self() << " pushing EOS to collector" << std::endl;
                 }
                 break;
             }
@@ -178,15 +176,21 @@ public:
         }
     }
 
-    void start_node() {
-        pthread_create(&this->worker_thread, nullptr, thread_function, (void *) this);
+    static void *thread_function_helper(void *args) {
+        Node *node = static_cast<Node*>(args);
+        node->thread_function(node);
+        return nullptr;
+    }
+
+    virtual void start_node() {
+        pthread_create(&this->worker_thread, nullptr, &Node::thread_function_helper, this);
     }
 
     void stop_node() {
         pthread_cancel(this->worker_thread);
     }
 
-    void join_node() {
+    virtual void join_node() {
         pthread_join(this->worker_thread, nullptr);
     }
 
