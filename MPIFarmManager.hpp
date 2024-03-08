@@ -5,42 +5,89 @@
 #include <boost/serialization/vector.hpp>
 #include <vector>
 #include <string>
-#include "MPINode.hpp"
+#include "Node.hpp"
 
 namespace mpi = boost::mpi;
 using namespace std;
 
-class MPIFarmManager : public MPINode {
+class MPIFarmManager {
 private:
     mpi::environment *env;
     mpi::communicator *world;
 
     // Worker function callbacks
-    MPINode *emitter_node;
-    MPINode *collector_node;
-    vector<MPINode*> worker_nodes;
+    Node *emitter_node;
+    Node *collector_node;
+    vector<Node*> worker_nodes;
 
     // Scheduling state
     int num_workers;
     int rr_index = 0;
 
-public:
-    MPIFarmManager(mpi::environment *env, mpi::communicator *world) : env(env), world(world) {}
+    pthread_t thread;
+    pthread_t result_thread;
 
-    void add_emitter(MPINode *node) {
+    bool is_farm;
+
+public:
+    MPIFarmManager(mpi::environment *env, mpi::communicator *world) : env(env), world(world) {
+        this->is_farm = true;
+    }
+
+    void add_emitter(Node *node) {
         this->emitter_node = node;
     }
 
-    void add_collector(MPINode *node) {
+    void add_collector(Node *node) {
         this->collector_node = node;
     }
 
-    void add_worker(MPINode *node) {
+    void add_worker(Node *node) {
         this->worker_nodes.push_back(node);
         this->num_workers++;
     }
 
-    string run(string _) override {
+    // thread_function2 - used to read results from farm output queue and push to collector
+    void *thread_function2(void *args) {
+        cout << "------------------------Farm output thread function" << endl;
+
+        MPIFarmManager *manager = static_cast<MPIFarmManager*>(args);
+        Node *worker_node = manager->worker_nodes[world->rank() - 3];
+        auto output_queue = worker_node->get_output_queue_string();
+        if (!output_queue) {
+            throw runtime_error("------------------------Fatal error: Output queue is null");
+        }
+
+        while (true) {
+            string result;
+            bool success = output_queue->try_pop(result);
+            if (!success) {
+                continue;
+            }
+            cout << "wepfhawjkgcvjashjfblkashfejklsahefluashefkluhaskjf" << endl;
+            world->send(2, 0, result);
+            cout << "a;woifjasl;egjf;alsiwjefasiofjes;aljfg;alsejgl;jgk;awsehf" << endl;
+
+            if (result == "EOS") {
+                break;
+            }
+        }
+
+        cout << "------------------------Exiting farm output thread function" << endl;
+        return nullptr;
+    }
+
+    static void* thread_function_helper2(void *context) {
+        // Pass args to thread function
+        return static_cast<MPIFarmManager*>(context)->thread_function2(context);
+    }
+
+    void run_until_finish() {
+//        int i = 0;
+//        while (!i) {
+//            sleep(5);
+//        }
+
         int size = world->size();
         if (world->rank() == 0) {
             // Master Process that manages the farm
@@ -71,6 +118,7 @@ public:
 
                     break;
                 }
+                cout << "Sending task " << task << " to worker " << to_string(rr_index + 3) << endl;
                 // Distribute task to worker
                 world->send(rr_index + 3, 0, task);
                 rr_index = (rr_index + 1) % (size - 3);
@@ -104,22 +152,72 @@ public:
                 world->send(0, 0, response);
             }
         } else {
-            while(true) {
-                string task;
-                world->recv(1, 0, task);
-//                cout << "Emitter sent task " << task << " to worker " << world->rank() << endl;
-                if (task == "EOS") {
-                    cout << "Worker " << world->rank() << " done" << endl;
+            Node *worker_node = worker_nodes[world->rank() - 3];
 
-                    // Send EOS to collector
-                    world->send(2, 0, string("EOS"));
+            if (worker_node->get_is_farm()) {
+                worker_node->set_nested_node(true);
+                // Pass the worker node to the thread
 
-                    break;
+                worker_node->start_node();
+                pthread_t result_collector_thread;
+
+                // Wait two seconds for the thread to start
+//                sleep(2);
+                pthread_create(&result_collector_thread, nullptr, thread_function_helper2, this);
+
+                while(true) {
+                    string task;
+                    world->recv(1, 0, task);
+
+                    cout << "Emitter sent task " << task << " to worker " << world->rank() << endl;
+                    if (task == "EOS") {
+                        cout << "Worker " << world->rank() << " done" << endl;
+
+                        // Push EOS to worker node
+                        // TODO: Clean
+                        worker_node->get_input_queue_string()->push("EOS");
+
+                        break;
+                    }
+
+                    cout << "MPI Worker " << world->rank() << " received task " << task << endl;
+
+                    // Send task to farm
+                    worker_node->run(task);
                 }
-                string result = worker_nodes[world->rank() - 3]->run(task);
-                world->send(2, 0, result);
+                pthread_join(result_collector_thread, nullptr);
+
+                worker_node->join_node();
+            } else {
+                while(true) {
+                    string task;
+                    world->recv(1, 0, task);
+                    if (task == "EOS") {
+
+                        // Push EOS to worker node
+                        // TODO: Clean
+                        worker_node->get_input_queue_string()->push("EOS");
+                        worker_node->get_input_queue()->push(nullptr);
+
+                        worker_node->join_node();
+
+                        // Send EOS to collector
+                        world->send(2, 0, string("EOS"));
+
+                        break;
+                    }
+                    // Send task to farm
+                    worker_node->run(task);
+
+                    // Send result to collector
+//                    world->send(2, 0, result);
+                }
             }
         }
+    }
+
+    string run(string task) {
+        return "";
     }
 };
 

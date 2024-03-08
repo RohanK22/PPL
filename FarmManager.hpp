@@ -16,26 +16,24 @@ protected:
     pthread_t thread;
     pthread_t collector_thread;
     int rr_index = 0;
-    bool is_nested_node;
 
 public:
-    FarmManager() {
+    FarmManager(bool distributed = false) {
         this->is_farm = true;
-        this->is_nested_node = true;
+        this->is_nested_node = is_distributed;
+        this->is_distributed = distributed;
     }
 
 
     // Add emitter node
     void add_emitter(Node *node) {
         node->set_is_farm_emitter(true);
-        node->set_input_queue(this->get_input_queue());
         node->set_farm_node(this);
         this->emitter_node = node;
     }
 
     // Add collector node
     void add_collector(Node *node) {
-        node->set_output_queue(this->get_output_queue());
         node->set_farm_node(this);
         node->set_is_farm_collector(true);
         this->collector_node = node;
@@ -45,115 +43,216 @@ public:
     void add_worker(Node *node) {
         node->set_is_farm_worker(true);
         node->set_farm_node(this);
+        node->set_is_dist(true); // TODO Fix hardcoding
         worker_nodes.push_back(node);
         this->num_farm_worker_nodes = worker_nodes.size();
     }
 
+    // TODO: Can parameterise this function
     void *thread_function(void *args) override {
-        std::cout << "Farm Manager thread function" << std::endl;
-        auto queue = this->get_input_queue();
-        if (this->emitter_node != nullptr) {
-            queue = this->emitter_node->get_output_queue();
-        }
-        while (true) {
-            void *task = nullptr;
-            bool success = queue->try_pop(task);
-            if (!success) {
+        if (!is_distributed) {
+            std::cout << "Farm Manager thread function" << std::endl;
+            auto queue = this->get_input_queue();
+            if (this->emitter_node != nullptr) {
+                queue = this->emitter_node->get_output_queue();
+            }
+            while (true) {
+                void *task = nullptr;
+                bool success = queue->try_pop(task);
+                if (!success) {
 //                std::cout << "No task for farm" << std::endl;
-                continue;
-            }
-            if (task == nullptr) {
-                std::cout << "EOS for farm" << std::endl;
-
-                // Send EOS to all workers
-                for (int i = 0; i < num_farm_worker_nodes; i++) {
-                    this->worker_nodes[i]->get_input_queue()->push(nullptr);
+                    continue;
                 }
-                break;
-            }
+                if (task == nullptr) {
+                    std::cout << "EOS for farm" << std::endl;
 
-            // Assign task to worker
-            this->worker_nodes[rr_index]->get_input_queue()->push(task);
-            rr_index = (rr_index + 1) % num_farm_worker_nodes;
+                    // Send EOS to all workers
+                    for (int i = 0; i < num_farm_worker_nodes; i++) {
+                        this->worker_nodes[i]->get_input_queue()->push(nullptr);
+                    }
+                    break;
+                }
+
+                // Assign task to worker
+                this->worker_nodes[rr_index]->get_input_queue()->push(task);
+                rr_index = (rr_index + 1) % num_farm_worker_nodes;
+            }
+        } else {
+            std::cout << "Farm Manager Dist thread function" << std::endl;
+            auto queue = this->get_input_queue_string();
+            if (this->emitter_node != nullptr) {
+                queue = this->emitter_node->get_output_queue_string();
+            }
+            while (true) {
+                string task = "";
+                bool success = queue->try_pop(task);
+//                cout << "Task is " << task << endl;
+                if (!success) {
+//                    std::cout << "No task for farm" << std::endl;
+                    continue;
+                }
+                if (task == "EOS") {
+                    std::cout << "EOS for farm" << std::endl;
+
+                    // Send EOS to all workers
+                    for (int i = 0; i < num_farm_worker_nodes; i++) {
+                        this->worker_nodes[i]->get_input_queue_string()->push(string("EOS"));
+                    }
+                    break;
+                }
+                // Assign task to worker
+                this->worker_nodes[rr_index]->get_input_queue_string()->push(task);
+                rr_index = (rr_index + 1) % num_farm_worker_nodes;
+            }
         }
         return nullptr;
     }
 
     static void* thread_function_helper(void *context) {
-        return static_cast<FarmManager*>(context)->thread_function(nullptr);
+        return static_cast<FarmManager*>(context)->thread_function(context);
     }
 
     void *collector_thread_function(void *args) {
-        std::cout << "Farm Manager collector thread function" << std::endl;
-        int eos_counts = 0;
-        // Set of worker indices that have finished
-        std::set<int> finished_workers;
-        bool end = false;
-        auto queue = this->get_output_queue();
-        if (this->collector_node != nullptr) {
-            queue = this->collector_node->get_input_queue();
-        }
-        while (true) {
-            // Loop through all workers that haven't shut down
-            for (int i = 0; i < num_farm_worker_nodes; i++) {
-                if (finished_workers.find(i) != finished_workers.end()) {
-                    continue;
-                }
-                void *task = nullptr;
-                bool success = this->worker_nodes[i]->get_output_queue()->try_pop(task);
-
-                if (!success) {
-                    continue;
-                }
-                if (task == nullptr) {
-                    eos_counts++;
-                    finished_workers.insert(i);
-
-                    if (eos_counts == num_farm_worker_nodes) {
-                        std::cout << "Farm node shutting down as Collector received all EOS" << std::endl;
-                        this->get_output_queue()->push(nullptr);
-                        end = true;
-                        break;
-                    }
-                    continue;
-                }
-                queue->push(task);
+        if (!is_distributed) {
+            std::cout << "Farm Manager collector thread function" << std::endl;
+            int eos_counts = 0;
+            // Set of worker indices that have finished
+            std::set<int> finished_workers;
+            bool end = false;
+            auto queue = this->get_output_queue();
+            if (this->collector_node != nullptr) {
+                queue = this->collector_node->get_input_queue();
             }
-            if (end) {
-                break;
+            while (true) {
+                // Loop through all workers that haven't shut down
+                for (int i = 0; i < num_farm_worker_nodes; i++) {
+                    if (finished_workers.find(i) != finished_workers.end()) {
+                        continue;
+                    }
+                    void *task = nullptr;
+                    bool success = this->worker_nodes[i]->get_output_queue()->try_pop(task);
+
+                    if (!success) {
+                        continue;
+                    }
+                    if (task == nullptr) {
+                        eos_counts++;
+                        finished_workers.insert(i);
+
+                        if (eos_counts == num_farm_worker_nodes) {
+                            std::cout << "Farm node shutting down as Collector received all EOS" << std::endl;
+                            this->get_output_queue()->push(nullptr);
+                            end = true;
+                            break;
+                        }
+                        continue;
+                    }
+                    queue->push(task);
+                }
+                if (end) {
+                    break;
+                }
+            }
+        } else {
+            std::cout << "Dist Farm Manager collector thread function" << std::endl;
+            int eos_counts = 0;
+            // Set of worker indices that have finished
+            std::set<int> finished_workers;
+            bool end = false;
+            auto queue = this->get_output_queue_string();
+            if (this->collector_node != nullptr) {
+                queue = this->collector_node->get_input_queue_string();
+            }
+            while (true) {
+                    // Loop through all workers that haven't shut down
+                for (int i = 0; i < num_farm_worker_nodes; i++) {
+                    if (finished_workers.find(i) != finished_workers.end()) {
+                        continue;
+                    }
+                    string *task = new string();
+                    bool success = this->worker_nodes[i]->get_output_queue_string()->try_pop(*task);
+
+                    if (!success) {
+                        continue;
+                    }
+                    if (*task == "EOS") {
+                        eos_counts++;
+                        finished_workers.insert(i);
+
+                        if (eos_counts == num_farm_worker_nodes) {
+                            std::cout << "Farm node shutting down as Collector received all EOS" << std::endl;
+                            this->get_output_queue_string()->push("EOS");
+                            end = true;
+                            break;
+                        }
+                        continue;
+                    }
+                    queue->push(*task);
+                }
+                if (end) {
+                    break;
+                }
             }
         }
         return nullptr;
     }
 
     static void* collector_thread_function_helper(void *context) {
-        return static_cast<FarmManager*>(context)->collector_thread_function(nullptr);
+        return static_cast<FarmManager*>(context)->collector_thread_function(context);
     }
 
     void start_node() override {
+        // Set input and output queue of farm node
+        this->set_input_queue(new Queue<void*>());
+        this->set_output_queue(new Queue<void*>());
+        this->set_input_queue_string(new Queue<string>());
+        this->set_output_queue_string(new Queue<string>());
+
         std::cout << "Starting Farm Manager" << std::endl;
         // Start nodes
         if (this->emitter_node != nullptr) { // TODO: Connect
+            this->emitter_node->set_input_queue(this->get_input_queue());
+            this->emitter_node->set_output_queue(new Queue<void*>());
+            this->emitter_node->set_input_queue_string(this->get_input_queue_string());
+            this->emitter_node->set_output_queue_string(new Queue<string>());
             this->emitter_node->start_node();
         }
         for (int i = 0; i < num_farm_worker_nodes; i++) {
-            std::cout << "Farm Input queue: " << this->get_input_queue() << std::endl;
-            std::cout << "Farm Output queue: " << this->get_output_queue() << std::endl;
-            std::cout << worker_nodes[i]->get_input_queue() << std::endl;
-            std::cout << worker_nodes[i]->get_output_queue() << std::endl;
 
+            // Each worker node has its own input and output queue
+            worker_nodes[i]->set_input_queue(new Queue<void*>());
+            worker_nodes[i]->set_output_queue(new Queue<void*>());
+            worker_nodes[i]->set_input_queue_string(new Queue<string>());
+            worker_nodes[i]->set_output_queue_string(new Queue<string>());
+
+//            std::cout << "Farm Input queue: " << this->get_input_queue() << std::endl;
+//            std::cout << "Farm Output queue: " << this->get_output_queue() << std::endl;
+//            std::cout << worker_nodes[i]->get_input_queue() << std::endl;
+//            std::cout << worker_nodes[i]->get_output_queue() << std::endl;
+
+            cout << "Starting node farm worker " << i << endl;
             worker_nodes[i]->start_node();
         }
         if (this->collector_node != nullptr) {
+            this->collector_node->set_input_queue(new Queue<void*>());
+            this->collector_node->set_output_queue(this->get_output_queue());
+            this->collector_node->set_input_queue_string(new Queue<string>());
+            this->collector_node->set_output_queue_string(this->get_output_queue_string());
             this->collector_node->start_node();
         }
 
         std::cout << "Farm Manager started" << std::endl;
 
-        if (this->is_nested_node) {
+//        cout << "Before YOOO is " << to_string(this->is_nested_node) << endl;
+//        if (this->is_nested_node) {
+//            cout << "YOOOOOO" << endl;
+
+            // This moves tasks from the input queue to the worker nodes
             pthread_create(&this->thread, nullptr, &FarmManager::thread_function_helper, this);
+
+            // This moves tasks from the worker nodes to the output queue
             pthread_create(&this->collector_thread, nullptr, &FarmManager::collector_thread_function_helper, this);
-        }
+//        }
     }
 
     void join_node() override {
@@ -170,15 +269,27 @@ public:
             this->collector_node->join_node();
         }
 
-        if (this->is_nested_node) {
+//        if (this->is_nested_node) {
             pthread_join(this->thread, nullptr);
             pthread_join(this->collector_thread, nullptr);
-        }
+//        }
+
+        cout << "Farm Node joined" << endl;
+
     }
 
     // Should never be called
     void* run(void *task) override {
         throw std::runtime_error("FarmManager run should never be called");
+//        cout << "FarmManager got task" << endl;
+//        this->get_input_queue()->push(task);
+//        return nullptr;
+    }
+
+    string run(string task) override {
+        cout << "Farm is receiving task from MPI" << endl;
+        this->get_input_queue_string()->push(task);
+        return string("Ignore");
     }
 
     void run_until_finish() {

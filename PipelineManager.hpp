@@ -80,7 +80,7 @@ public:
     }
 
     // Should never be called
-    void* run(void *task) override {
+    void* run(void *task)  {
         throw std::runtime_error("PipelineManager run should never be called");
     }
 

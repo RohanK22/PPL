@@ -4,10 +4,11 @@
 #include <cstdlib>
 #include "../MPIFarmManager.hpp"
 #include "../MPINode.hpp"
+#include "../Node.hpp"
 
 namespace mpi = boost::mpi;
 
-class FactorialEmitter: public MPINode  {
+class FactorialEmitter: public Node {
 public:
     FactorialEmitter(int num_tasks) {
         this->num_tasks = num_tasks;
@@ -28,7 +29,7 @@ private:
     int curr = 0;
 };
 
-class FactorialWorker: public MPINode  {
+class FactorialWorker: public Node {
 public:
     string run(string task) override {
         int num = std::stoi(task);
@@ -44,7 +45,7 @@ private:
     int receive_count = 0;
 };
 
-class FactorialCollector: public MPINode  {
+class FactorialCollector: public Node {
 public:
     string run(string task) override {
         long long num = std::stoll(task);

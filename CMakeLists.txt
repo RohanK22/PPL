@@ -138,6 +138,18 @@ target_link_libraries(mpi_farm_test
         MPI::MPI_CXX
 )
 
+# Nested Farm in MPI Farm
+# farm_test
+include_directories(${Boost_INCLUDE_DIRS})
+find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
+add_executable(nested_farm_in_mpi_farm
+        ${COMMON_SOURCES}
+        MPI_Examples/nested_farm_in_mpi_farm.cpp
+)
+target_link_libraries(nested_farm_in_mpi_farm
+        ${Boost_LIBRARIES}
+        MPI::MPI_CXX
+)
 
 #mpic++ -I/path/to/boost/mpi my_application.cpp -Llibdir \
 #  -lboost_mpi -lboost_serialization

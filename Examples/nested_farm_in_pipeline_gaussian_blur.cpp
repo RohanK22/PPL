@@ -15,7 +15,7 @@ public:
         this->set_is_pipeline_emitter(true);
     }
 
-    void* run(void*) override {
+    void* run(void*) {
         // Iterate through the images in the specified folder
         for (const auto& entry : fs::directory_iterator(folder_path)) {
             string image_path = entry.path().string();
@@ -32,7 +32,7 @@ private:
 
 class GrayscaleConverter : public Node {
 public:
-    void* run(void* task) override {
+    void* run(void* task) {
         EasyBMP::Image* image = static_cast<EasyBMP::Image*>(task);
 
         cout << "Converting image to grayscale" << endl;
@@ -52,7 +52,7 @@ public:
 
 class GaussianBlurWorker : public Node {
 public:
-    void* run(void* task) override {
+    void* run(void* task) {
         EasyBMP::Image* image = static_cast<EasyBMP::Image*>(task);
         EasyBMP::Image* blurred_image = new EasyBMP::Image(image->TellWidth(), image->TellHeight());
 
@@ -93,7 +93,7 @@ class ImageWriter : public Node {
 public:
     ImageWriter(const string& output_path) : output_path(output_path) {}
 
-    void* run(void* task) override {
+    void* run(void* task) {
         cout << "Final stage!!!! Writing image to " << output_path << endl;
 
         EasyBMP::Image* image = static_cast<EasyBMP::Image*>(task);

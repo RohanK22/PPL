@@ -53,6 +53,13 @@ public:
         return true;
     }
 
+    int size() {
+        pthread_mutex_lock(&mutex);
+        int size = q.size();
+        pthread_mutex_unlock(&mutex);
+        return size;
+    }
+
     ~Queue() {
         pthread_mutex_destroy(&mutex);
         pthread_cond_destroy(&non_empty_queue_cond); // Destroying the renamed condition variable
