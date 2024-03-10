@@ -163,7 +163,7 @@ target_link_libraries(mpi_farm_test
 )
 
 # Nested Farm in MPI Farm
-# farm_test
+# farm_test -- Factorials
 include_directories(${Boost_INCLUDE_DIRS})
 find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
 add_executable(nested_farm_in_mpi_farm
@@ -171,6 +171,18 @@ add_executable(nested_farm_in_mpi_farm
         MPI_Examples/nested_farm_in_mpi_farm.cpp
 )
 target_link_libraries(nested_farm_in_mpi_farm
+        ${Boost_LIBRARIES}
+        MPI::MPI_CXX
+)
+
+# Nested Farm in MPI Farm -- Montecarlo PI
+include_directories(${Boost_INCLUDE_DIRS})
+find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
+add_executable(nested_farm_in_mpi_farm_monte_carlo
+        ${COMMON_SOURCES}
+        MPI_Examples/monte_carlo_pi.cpp
+)
+target_link_libraries(nested_farm_in_mpi_farm_monte_carlo
         ${Boost_LIBRARIES}
         MPI::MPI_CXX
 )

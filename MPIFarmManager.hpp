@@ -49,8 +49,6 @@ public:
 
     // thread_function2 - used to read results from farm output queue and push to collector
     void *thread_function2(void *args) {
-        cout << "------------------------Farm output thread function" << endl;
-
         MPIFarmManager *manager = static_cast<MPIFarmManager*>(args);
         Node *worker_node = manager->worker_nodes[world->rank() - 3];
         auto output_queue = worker_node->get_output_queue_string();
@@ -64,16 +62,12 @@ public:
             if (!success) {
                 continue;
             }
-            cout << "wepfhawjkgcvjashjfblkashfejklsahefluashefkluhaskjf" << endl;
             world->send(2, 0, result);
-            cout << "a;woifjasl;egjf;alsiwjefasiofjes;aljfg;alsejgl;jgk;awsehf" << endl;
 
             if (result == "EOS") {
                 break;
             }
         }
-
-        cout << "------------------------Exiting farm output thread function" << endl;
         return nullptr;
     }
 

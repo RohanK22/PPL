@@ -2,6 +2,12 @@
 // It uses parallelism at two levels
 // An MPI farm is used to distribute the work to Node level farms
 
+//  time ./farm_monte_carlo 100000000 1
+// mpirun -np 4 ./nested_farm_in_mpi_farm_monte_carlo 1000000 1 6
+
+//./farm_monte_carlo 100000000 1  8.52s user 0.04s system 193% cpu 4.432 total
+// mpirun -np 4 ./nested_farm_in_mpi_farm_monte_carlo 100000000 1 8  6.16s user 0.17s system 381% cpu 1.660 total
+
 #include <iostream>
 #include <cmath>
 #include "../FarmManager.hpp"
@@ -67,28 +73,38 @@ MonteCarloPiTask deserialise_monte_carlo_pi_task(string task_str) {
 
 class Emitter : public Node {
 public:
-    Emitter(ll num_samples, ll num_workers) : num_samples(num_samples), num_workers(num_workers) {}
-
-    string run(string) override {
+    Emitter(ll num_samples, ll num_workers) : num_samples(num_samples), num_workers(num_workers) {
         ll samples_per_worker = num_samples / num_workers;
         ll residual = num_samples % num_workers;
 
         for (ll i = 0; i < num_workers; ++i) {
             ll worker_samples = samples_per_worker;
             MonteCarloPiTask task = MonteCarloPiTask(worker_samples);
-            this->get_output_queue_string()->push(serialise_montercarlo_pi_task(task));
+            tasks.push_back(task);
         }
         if (residual > 0) {
             MonteCarloPiTask task = MonteCarloPiTask(residual);
-            this->get_output_queue_string()->push(serialise_montercarlo_pi_task(task));
+            tasks.push_back(task);
         }
+    }
 
-        return "EOS";
+    string run(string) override {
+        if (curr == num_workers) {
+            std::cout << "Generator Done" << std::endl;
+            return string("EOS");
+        }
+        string task = serialise_montercarlo_pi_task(tasks[curr]);
+        curr++;
+        return task;
     }
 
 private:
     ll num_samples;
     ll num_workers;
+
+    int num_tasks;
+    int curr = 0;
+    vector<MonteCarloPiTask> tasks;
 };
 
 class Worker : public Node {
@@ -96,7 +112,7 @@ public:
     string run(string task_str) override {
         MonteCarloPiTask task = deserialise_monte_carlo_pi_task(task_str);
         task.perform_simulation();
-        return serialise_montercarlo_pi_task(task);
+        return string(serialise_montercarlo_pi_task(task));
     }
 };
 
@@ -105,6 +121,7 @@ public:
     Collector(ll num_samples, ll num_workers) : num_samples(num_samples), num_workers(num_workers) {
         this->total_inside_circle = 0;
         this->curr = 0;
+        this->total_tasks = num_workers + (num_samples % num_workers != 0);
     }
 
     string run(string task_str) override {
@@ -112,19 +129,20 @@ public:
         total_inside_circle += task.get_inside_circle_count();
         curr++;
 
-        if (curr == num_workers) {
-            double estimated_pi = 4.0 * (total_inside_circle / num_samples);
+        if (curr == total_tasks) {
+            double estimated_pi = 4.0 * total_inside_circle / num_samples;
             std::cout << "Estimated Pi: " << estimated_pi << std::endl;
-            return "EOS";
+            return string("EOS");
         }
 
-        return "CONTINUE";
+        return string("CONTINUE");
     }
 
 private:
     ll num_samples;
     ll num_workers;
     ll total_inside_circle;
+    ll total_tasks;
     ll curr;
 };
 
@@ -138,9 +156,9 @@ int main(int argc, char *argv[]) {
     mpi::environment env;
     mpi::communicator world;
 
-    ll num_samples = std::stoi(argv[1]);
-    ll num_mpi_farm_workers = std::stoi(argv[2]);
-    ll num_node_farm_workers = std::stoi(argv[3]);
+    ll num_samples = std::stoll(argv[1]);
+    ll num_mpi_farm_workers = std::stoll(argv[2]);
+    ll num_node_farm_workers = std::stoll(argv[3]);
 
     // We are going to have these many farm threads as workers in total across all processes
     ll num_workers = num_mpi_farm_workers * num_node_farm_workers;
@@ -149,14 +167,16 @@ int main(int argc, char *argv[]) {
     MPIFarmManager *mpi_farm_manager = new MPIFarmManager(&env, &world);
 
     mpi_farm_manager->add_emitter(new Emitter(num_samples, num_workers));
+    mpi_farm_manager->add_collector(new Collector(num_samples, num_workers));
+
     for (ll i = 0; i < num_mpi_farm_workers; i++) {
-        FarmManager * node_farm_manager = new FarmManager();
+        cout << "Adding node farm manager " << i << endl;
+        FarmManager *node_farm_manager = new FarmManager(true);
         for (ll j = 0; j < num_node_farm_workers; j++) {
             node_farm_manager->add_worker(new Worker());
         }
         mpi_farm_manager->add_worker(node_farm_manager);
     }
-    mpi_farm_manager->add_collector(new Collector(num_samples, num_workers));
 
     mpi_farm_manager->run_until_finish();
 
