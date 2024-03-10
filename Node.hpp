@@ -205,7 +205,7 @@ public:
                     } else if (node->is_farm_worker) {
                         // Push EOS to collector
                         cq->push(task);
-                        std::cout << "Worker " << pthread_self() << " pushing EOS to collector" << std::endl;
+//                        std::cout << "Worker " << pthread_self() << " pushing EOS to collector" << std::endl;
                     }
                     break;
                 }
@@ -225,7 +225,7 @@ public:
                 if (node->is_farm_emitter) {
                     string result = node->run(string(""));
                     if (result == "EOS") {
-                    std::cout << "Farm emitter output null result (EOS)" << std::endl;
+//                    std::cout << "Farm emitter output null result (EOS)" << std::endl;
                         // Push EOS for each worker
                         for (int i = 0; i < node->get_farm_node()->num_farm_worker_nodes; i++) {
                             cq->push(string("EOS"));

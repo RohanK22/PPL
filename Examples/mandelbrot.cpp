@@ -29,7 +29,9 @@ public:
               width(width), height(height), minReal(minReal), maxReal(maxReal),
               minImag(minImag), maxImag(maxImag), maxIterations(maxIterations) {
         // Initialize the 2D array with dimensions (width x height)
-        colors.resize(width, vector<RGBColor>(height, RGBColor(255, 255, 255)));
+        int chunk_width = endCol - startCol;
+        int chunk_height = endRow - startRow;
+        colors.resize(chunk_width, vector<RGBColor>(chunk_height));
     }
 
     void populateColors() {
@@ -137,9 +139,11 @@ public:
         if (received == numChunks) {
 //            cout << "Saving image to " << image_path << endl;
             finalImage.Write(image_path);
+
+            return nullptr;
         }
 
-        return nullptr;
+        return (void*)chunk;
     }
 
 private:
@@ -167,13 +171,6 @@ int main(int argc, char* argv[]) {
     int numColChunks = stoi(argv[5]);
     int numWorkers = stoi(argv[6]);
 
-//    int width = 1200;
-//    int height = 800;
-//    int maxIterations = 1000;
-//    int numRowChunks = 4 * 3;
-//    int numColChunks = 4 * 3;
-//    int numWorkers = 8;
-
     string fname = "mandelbrot_" + to_string(width) + "x" + to_string(height) + ".bmp";
 
     FarmManager *farm = new FarmManager();
@@ -188,7 +185,7 @@ int main(int argc, char* argv[]) {
         farm->add_worker(worker);
     }
 
-    farm->run(nullptr);
+    farm->run_until_finish();
 
     return 0;
 }

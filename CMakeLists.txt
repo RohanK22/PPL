@@ -82,6 +82,30 @@ add_executable(seq_matmul
         Examples/seq_matmul.cpp
 )
 
+# Executable target: farm_dot_product
+add_executable(farm_dot_product
+        ${COMMON_SOURCES}
+        Examples/farm_dot_product.cpp
+)
+
+# Executable target: seq_dot_product
+add_executable(seq_dot_product
+        ${COMMON_SOURCES}
+        Examples/seq_dot_product.cpp
+)
+
+# Executable target: farm_monte_carlo
+add_executable(farm_monte_carlo
+        ${COMMON_SOURCES}
+        Examples/farm_monte_carlo.cpp
+)
+
+# Executable target: seq_monte_carlo
+add_executable(seq_monte_carlo
+        ${COMMON_SOURCES}
+        Examples/seq_monte_carlo.cpp
+)
+
 # Nested Farm in Pipeline
 # nexted_farm_in_pipeline_gaussian_blur
 add_executable(nested_farm_in_pipeline_gaussian_blur
