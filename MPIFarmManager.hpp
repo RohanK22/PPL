@@ -65,6 +65,8 @@ public:
             world->send(2, 0, result);
 
             if (result == "EOS") {
+
+                cout << "awhopivawnvuoaewrhpiausrghawiouehgpowahsfgpiouasurghs" << endl;
                 break;
             }
         }

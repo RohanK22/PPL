@@ -205,7 +205,7 @@ public:
                     } else if (node->is_farm_worker) {
                         // Push EOS to collector
                         cq->push(task);
-//                        std::cout << "Worker " << pthread_self() << " pushing EOS to collector" << std::endl;
+                        std::cout << "Worker " << pthread_self() << " pushing EOS to collector" << std::endl;
                     }
                     break;
                 }

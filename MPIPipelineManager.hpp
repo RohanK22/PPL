@@ -4,25 +4,26 @@
 
 #include "MPINode.hpp"
 #include <boost/mpi.hpp>
+#include "Node.hpp"
 
 using namespace std;
 namespace mpi = boost::mpi;
 
 // TODO: Might want to drop the "Manager" suffix
-class MPIPipelineManager : public MPINode {
+class MPIPipelineManager : public Node {
 private:
     mpi::environment *env;
     mpi::communicator *world;
 
     // Stages
-    vector<MPINode*> pipline_nodes;
+    vector<Node*> pipline_nodes;
 
     int num_pipeline_stages = 0;
 
 public:
     MPIPipelineManager(mpi::environment *env, mpi::communicator *world) : env(env), world(world) {}
 
-    void add_pipeline_node(MPINode *node) {
+    void add_pipeline_node(Node *node) {
         this->pipline_nodes.push_back(node);
         this->num_pipeline_stages++;
     }

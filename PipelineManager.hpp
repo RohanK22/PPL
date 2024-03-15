@@ -32,6 +32,7 @@ public:
         this->num_pipeline_stages = pipeline_nodes.size();
     }
 
+    // TODO: Deprecate this function
     // If the pipeline is a nested node we need to have a separate thread that receives and sends tasks to the stages
     void *thread_function(void *args) override {
         std::cout << "PipelineManager thread function " << std::endl;

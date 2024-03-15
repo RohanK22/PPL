@@ -96,6 +96,7 @@ public:
 
                     // Send EOS to all workers
                     for (int i = 0; i < num_farm_worker_nodes; i++) {
+                        cout << "Sending EOS to farm node worker " << i << endl;
                         this->worker_nodes[i]->get_input_queue_string()->push(string("EOS"));
                     }
                     break;
@@ -174,25 +175,27 @@ public:
                     if (finished_workers.find(i) != finished_workers.end()) {
                         continue;
                     }
-                    string *task = new string();
-                    bool success = this->worker_nodes[i]->get_output_queue_string()->try_pop(*task);
-
+                    string task;
+                    bool success = this->worker_nodes[i]->get_output_queue_string()->try_pop(task);
                     if (!success) {
                         continue;
                     }
-                    if (*task == "EOS") {
+                    cout << "Task bro " << task << endl;
+                    if (task == "EOS") {
                         eos_counts++;
                         finished_workers.insert(i);
 
+                        cout << "YOOOOOOOOO" <<endl;
+
                         if (eos_counts == num_farm_worker_nodes) {
                             std::cout << "Farm node shutting down as Collector received all EOS" << std::endl;
-                            this->get_output_queue_string()->push("EOS");
+                            queue->push(string("EOS"));
                             end = true;
                             break;
                         }
                         continue;
                     }
-                    queue->push(*task);
+                    queue->push(task);
                 }
                 if (end) {
                     break;

@@ -31,9 +31,8 @@ public:
 
     void perform_simulation() {
         for (ll i = 0; i < num_samples; ++i) {
-            double x = static_cast<double>(rand()) / RAND_MAX;
-            double y = static_cast<double>(rand()) / RAND_MAX;
-
+            double x = static_cast<double>(rand() / RAND_MAX);
+            double y = static_cast<double>(rand() / RAND_MAX);
             if (std::sqrt(x * x + y * y) <= 1.0) {
                 inside_circle++;
             }
@@ -86,10 +85,11 @@ public:
             MonteCarloPiTask task = MonteCarloPiTask(residual);
             tasks.push_back(task);
         }
+        num_tasks = tasks.size();
     }
 
     string run(string) override {
-        if (curr == num_workers) {
+        if (curr == num_tasks) {
             std::cout << "Generator Done" << std::endl;
             return string("EOS");
         }
@@ -111,7 +111,9 @@ class Worker : public Node {
 public:
     string run(string task_str) override {
         MonteCarloPiTask task = deserialise_monte_carlo_pi_task(task_str);
+        cout << "Starting task " << task_str << endl;
         task.perform_simulation();
+        cout << "Ending task " << task_str << endl;
         return string(serialise_montercarlo_pi_task(task));
     }
 };

@@ -28,7 +28,7 @@ public:
         pthread_mutex_unlock(&mutex);
     }
 
-    T wait_and_pop() {
+    T pop() {
         pthread_mutex_lock(&mutex);
         while (q.empty()) {
             // Wait for

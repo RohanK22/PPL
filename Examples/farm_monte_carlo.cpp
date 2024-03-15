@@ -100,8 +100,8 @@ int main(int argc, char *argv[]) {
 
     srand(100);
 
-    ll num_samples = std::stoi(argv[1]);
-    ll num_workers = std::stoi(argv[2]);
+    ll num_samples = std::stoll(argv[1]);
+    ll num_workers = std::stoll(argv[2]);
 
     Emitter *emitter = new Emitter(num_samples, num_workers);
     Collector *collector = new Collector(num_samples, num_workers);
