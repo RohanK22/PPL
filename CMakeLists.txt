@@ -29,6 +29,12 @@ set(COMMON_SOURCES
         MPIPipelineManager.hpp
 )
 
+# Executable target: farm_test
+add_executable(farm_test
+        ${COMMON_SOURCES}
+        Examples/farm_test.cpp
+)
+
 # Executable target: julia
 add_executable(julia
         ${COMMON_SOURCES}

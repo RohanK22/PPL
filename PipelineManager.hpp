@@ -33,9 +33,9 @@ public:
     }
 
     // TODO: Deprecate this function
-    // If the pipeline is a nested node we need to have a separate thread that receives and sends tasks to the stages
+    // If the pipeline is a nested node we need to have a separate distribution_thread that receives and sends tasks to the stages
     void *thread_function(void *args) override {
-        std::cout << "PipelineManager thread function " << std::endl;
+        std::cout << "PipelineManager distribution_thread function " << std::endl;
         while (true) {
             void *task = nullptr;
             bool success = this->get_input_queue()->try_pop(task);

@@ -74,7 +74,7 @@ public:
     }
 
     static void* thread_function_helper2(void *context) {
-        // Pass args to thread function
+        // Pass args to distribution_thread function
         return static_cast<MPIFarmManager*>(context)->thread_function2(context);
     }
 
@@ -152,12 +152,12 @@ public:
 
             if (worker_node->get_is_farm()) {
                 worker_node->set_nested_node(true);
-                // Pass the worker node to the thread
+                // Pass the worker node to the distribution_thread
 
                 worker_node->start_node();
                 pthread_t result_collector_thread;
 
-                // Wait two seconds for the thread to start
+                // Wait two seconds for the distribution_thread to start
 //                sleep(2);
                 pthread_create(&result_collector_thread, nullptr, thread_function_helper2, this);
 

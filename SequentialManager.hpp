@@ -5,7 +5,7 @@
 #ifndef PPL_SEQUENTIALMANAGER_HPP
 #define PPL_SEQUENTIALMANAGER_HPP
 
-// Similar to farm manager except that it runs all tasks sequentially on the main thread
+// Similar to farm manager except that it runs all tasks sequentially on the main distribution_thread
 // Assuming the tasks are still passed through a queue
 
 #include "Queue.hpp"
@@ -48,7 +48,7 @@ public:
             bool success = emitter_queue->try_pop(task);
 
             if (!success) {
-                // Stop thread if there are no more tasks
+                // Stop distribution_thread if there are no more tasks
                 break;
             }
 

@@ -5,7 +5,7 @@
 #ifndef PPL_TIMER_HPP
 #define PPL_TIMER_HPP
 
-// A thread safe implementation of a timer
+// A distribution_thread safe implementation of a timer
 // Should support: start, stop, reset, get_elapsed_time
 // Should be able to start and stop multiple times, and it should aggregate the elapsed time
 

@@ -1,5 +1,5 @@
 
-// Each node is a thread of computation that reads tasks from its input queue and inserts completed tasks into
+// Each node is a distribution_thread of computation that reads tasks from its input queue and inserts completed tasks into
 #ifndef PPL_MPI_NODE_HPP
 #define PPL_MPI_NODE_HPP
 
@@ -106,7 +106,7 @@ public:
 
         if (node == nullptr) {
             std::cout << "Node is null" << std::endl;
-            throw std::runtime_error("Node argument is null that is passed to the thread function");
+            throw std::runtime_error("Node argument is null that is passed to the distribution_thread function");
         }
 
         Queue<string> *eq = node->get_input_queue();
