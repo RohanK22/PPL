@@ -2,12 +2,10 @@
 #include <iostream>
 #include "../FarmManager.hpp"
 #include "../EOSValue.hpp"
-#include "Timer.hpp"
-#include <algorithm>
 
 using namespace std;
 
-class FactorialEmitter : public Node<void*, void*> {
+class FactorialEmitter : public Node<void*> {
 public:
     FactorialEmitter(int num_tasks) {
         this->num_tasks = num_tasks;
@@ -28,7 +26,7 @@ private:
     int curr = 0;
 };
 
-class FactorialWorker : public Node<void*, void*> {
+class FactorialWorker : public Node<void*> {
 public:
     void* run(void* task) override {
         int num = *((int*) task);
@@ -40,7 +38,7 @@ public:
     }
 };
 
-class FactorialCollector : public Node<void*, void*> {
+class FactorialCollector : public Node<void*> {
 public:
     void* run(void* task) override {
         std::cout << "Collector received task " << receive_count << std::endl;
@@ -54,7 +52,7 @@ private:
 };
 
 int main() {
-    FarmManager<void*, void*> *farm = new FarmManager<void*, void*>();
+    FarmManager<void*> *farm = new FarmManager<void*>();
     int num_tasks = 5;
     int num_workers = 5;
 

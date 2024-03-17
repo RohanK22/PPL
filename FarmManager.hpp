@@ -8,13 +8,14 @@
 #include <iostream>
 #include <set>
 
-template <typename T, typename U>
-class FarmManager : public Node <T, U> {
+// T = serialisation type of data to be passed between farm nodes
+template <typename T>
+class FarmManager : public Node <T> {
 protected:
     // Farm nodes
-    Node<T, T> *emitter_node;
-    std::vector<Node<T, U>*> worker_nodes;
-    Node<U, U> *collector_node;
+    Node<T> *emitter_node;
+    std::vector<Node<T>*> worker_nodes;
+    Node<T> *collector_node;
 
     // Thread for moving tasks from input queue to worker nodes and from worker nodes to output queue
     pthread_t distribution_thread;
@@ -24,7 +25,7 @@ protected:
     int rr_index = 0;
 
     // EOS type
-//    inline static T EOS = (std::is_same<T, std::string>::value ? "EOS" : nullptr);
+    T EOS = this->get_EOS();
 
 public:
     FarmManager() {
@@ -32,34 +33,29 @@ public:
     }
 
     // Add emitter node
-    void add_emitter(Node<T, T> *node) {
+    void add_emitter(Node<T> *node) {
         node->set_type(NodeType::FarmEmitter);
         node->set_farm_node(this);
         this->emitter_node = node;
     }
 
     // Add collector node
-    void add_collector(Node<U, U> *node) {
+    void add_collector(Node<T> *node) {
         node->set_type(NodeType::FarmCollector);
         node->set_farm_node(this);
         this->collector_node = node;
     }
 
     // Add worker nodes
-    void add_worker(Node<T, U> *node) {
+    void add_worker(Node<T> *node) {
         node->set_type(NodeType::FarmWorker);
         node->set_farm_node(this);
         worker_nodes.push_back(node);
         this->num_farm_worker_nodes = worker_nodes.size();
     }
 
-    int get_num_farm_worker_nodes() {
-        return this->num_farm_worker_nodes;
-    }
-
     void *thread_function(void *args) {
         DEBUG_NODE_PRINT("Node Farm distribution thread started");
-        auto EOS = this->get_EOS();
         auto queue = this->get_input_queue();
         if (this->emitter_node != nullptr) {
             queue = this->emitter_node->get_output_queue();
@@ -75,7 +71,6 @@ public:
                 for (int i = 0; i < this->num_farm_worker_nodes; i++) {
                     this->worker_nodes[i]->get_input_queue()->push(EOS);
                 }
-                cout << "EYOOOOOOOOOOOOEYOOOOOOOOOOOOEYOOOOOOOOOOOOEYOOOOOOOOOOOOEYOOOOOOOOOOOOEYOOOOOOOOOOOO" <<endl;
                 break;
             }
             this->worker_nodes[rr_index]->get_input_queue()->push(task);
@@ -91,7 +86,6 @@ public:
     }
 
     void *collector_thread_function(void *args) {
-        auto EOS = this->get_EOS();
         int eos_counts = 0;
         std::set<int> finished_workers;
         bool end = false;
@@ -104,7 +98,7 @@ public:
                 if (finished_workers.find(i) != finished_workers.end()) {
                     continue;
                 }
-                U task;
+                T task;
                 bool success = this->worker_nodes[i]->get_output_queue()->try_pop(task);
                 if (!success) {
                     continue;
@@ -138,7 +132,7 @@ public:
 
     void start_node() override {
         this->set_input_queue(new Queue<T>());
-        this->set_output_queue(new Queue<U>());
+        this->set_output_queue(new Queue<T>());
 
         if (this->emitter_node != nullptr) {
             this->emitter_node->set_input_queue(this->get_input_queue());
@@ -147,11 +141,11 @@ public:
         }
         for (int i = 0; i < this->num_farm_worker_nodes; i++) {
             worker_nodes[i]->set_input_queue(new Queue<T>());
-            worker_nodes[i]->set_output_queue(new Queue<U>());
+            worker_nodes[i]->set_output_queue(new Queue<T>());
             worker_nodes[i]->start_node();
         }
         if (this->collector_node != nullptr) {
-            this->collector_node->set_input_queue(new Queue<U>());
+            this->collector_node->set_input_queue(new Queue<T>());
             this->collector_node->set_output_queue(this->get_output_queue());
             this->collector_node->start_node();
         }
@@ -181,14 +175,13 @@ public:
 //        return string("Node received task from MPI");
 //    }
 
-    U run(T task) {
+    T run(T task) {
         cout << "Farm is receiving task from MPI" << endl;
         this->get_input_queue()->push(task);
-        return U();
+        return T();
     }
 
     void run_until_finish() {
-//        this->is_nested_node = false;
         this->start_node();
         this->join_node();
     }

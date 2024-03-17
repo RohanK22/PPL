@@ -16,9 +16,9 @@ private:
     mpi::communicator *world;
 
     // Worker function callbacks
-    Node *emitter_node;
-    Node *collector_node;
-    vector<Node*> worker_nodes;
+    Node<string> *emitter_node;
+    Node<string> *collector_node;
+    vector<Node<string>*> worker_nodes;
 
     // Scheduling state
     int num_workers;
@@ -34,15 +34,15 @@ public:
         this->is_farm = true;
     }
 
-    void add_emitter(Node *node) {
+    void add_emitter(Node<string> *node) {
         this->emitter_node = node;
     }
 
-    void add_collector(Node *node) {
+    void add_collector(Node<string> *node) {
         this->collector_node = node;
     }
 
-    void add_worker(Node *node) {
+    void add_worker(Node<string> *node) {
         this->worker_nodes.push_back(node);
         this->num_workers++;
     }
@@ -50,8 +50,8 @@ public:
     // thread_function2 - used to read results from farm output queue and push to collector
     void *thread_function2(void *args) {
         MPIFarmManager *manager = static_cast<MPIFarmManager*>(args);
-        Node *worker_node = manager->worker_nodes[world->rank() - 3];
-        auto output_queue = worker_node->get_output_queue_string();
+        Node<string> *worker_node = manager->worker_nodes[world->rank() - 3];
+        auto output_queue = worker_node->get_output_queue();
         if (!output_queue) {
             throw runtime_error("------------------------Fatal error: Output queue is null");
         }
@@ -148,12 +148,10 @@ public:
                 world->send(0, 0, response);
             }
         } else {
-            Node *worker_node = worker_nodes[world->rank() - 3];
+            Node<string> *worker_node = worker_nodes[world->rank() - 3];
 
-            if (worker_node->get_is_farm()) {
-                worker_node->set_nested_node(true);
-                // Pass the worker node to the distribution_thread
-
+            if (worker_node->get_node_type() == NodeType::Farm) {
+                // Farm node
                 worker_node->start_node();
                 pthread_t result_collector_thread;
 
@@ -171,7 +169,7 @@ public:
 
                         // Push EOS to worker node
                         // TODO: Clean
-                        worker_node->get_input_queue_string()->push("EOS");
+                        worker_node->get_input_queue()->push("EOS");
 
                         break;
                     }
@@ -185,6 +183,7 @@ public:
 
                 worker_node->join_node();
             } else {
+                // Regular node
                 while(true) {
                     string task;
                     world->recv(1, 0, task);
@@ -192,8 +191,7 @@ public:
 
                         // Push EOS to worker node
                         // TODO: Clean
-                        worker_node->get_input_queue_string()->push("EOS");
-                        worker_node->get_input_queue()->push(nullptr);
+                        worker_node->get_input_queue()->push("EOS");
 
                         worker_node->join_node();
 
@@ -210,10 +208,6 @@ public:
                 }
             }
         }
-    }
-
-    string run(string task) {
-        return "";
     }
 };
 

@@ -7,7 +7,7 @@
 #define PPL_NODE_HPP
 
 // Debugging
-#define DEBUG_NODE
+//#define DEBUG_NODE
 #ifdef DEBUG_NODE
 #define DEBUG_NODE_PRINT(x) std::cout << x << std::endl;
 #else
@@ -29,17 +29,14 @@ enum class NodeType {
     FarmCollector
 };
 
-// Default to void*, void*
-template <typename T, typename U>
+// T = serialisation type of data to be passed between nodes
+template <typename T>
 class Node {
 private:
     pthread_t worker_thread;
     Queue<T> *input_queue;
-    Queue<U> *output_queue;
+    Queue<T> *output_queue;
     int collector_EOS_count;
-
-    // EOS is dependent on the type of the queue
-//    inline static T EOS = (std::is_same<T, std::string>::value ? "EOS" : nullptr);
 
 protected:
     // TODO: Move state to farm manager
@@ -57,6 +54,8 @@ protected:
         }
     }
 
+    T EOS = get_EOS();
+
 public:
     // Constructor
     Node(NodeType node_type = NodeType::None) {
@@ -72,7 +71,7 @@ public:
         return this->input_queue;
     }
 
-    Queue<U> *get_output_queue() {
+    Queue<T> *get_output_queue() {
         return this->output_queue;
     }
 
@@ -80,7 +79,7 @@ public:
         this->input_queue = iq;
     }
 
-    void set_output_queue(Queue<U> *oq) {
+    void set_output_queue(Queue<T> *oq) {
         this->output_queue = oq;
     }
 
@@ -88,29 +87,23 @@ public:
         this->node_type = node_type;
     }
 
-    template <typename V, typename W>
-    void set_farm_node(Node<V, W> *farm_node) {
+    template <typename V>
+    void set_farm_node(Node<V> *farm_node) {
         this->farm_node = farm_node;
-    }
-
-    void set_nested_node(bool is_nested_node) {
-        this->is_nested_node = is_nested_node;
     }
 
     Node *get_farm_node() {
         return this->farm_node;
     }
 
-    Node *get_pipeline_node() {
-        return this->pipeline_node;
+    NodeType get_node_type() {
+        return this->node_type;
     }
 
     // Loop function for FarmEmitter nodes
-    void farm_emitter_loop(Queue<T>* eq, Queue<U>* cq) {
-        auto EOS = get_EOS();
-        DEBUG_NODE_PRINT("Emitter EOS is nullptr ? " + std::to_string(EOS == nullptr));
+    void farm_emitter_loop(Queue<T>* eq, Queue<T>* cq) {
         while (true) {
-            U result = this->run(EOS);
+            T result = this->run(EOS);
             DEBUG_NODE_PRINT("Emitter " << pthread_self() << " generated task " << result);
             if (result == EOS) {
                 DEBUG_NODE_PRINT("EOS for Farm Emitter");
@@ -126,8 +119,7 @@ public:
     }
 
     // Loop function for FarmWorker nodes
-    void farm_worker_loop(Queue<T>* eq, Queue<U>* cq) {
-        auto EOS = get_EOS();
+    void farm_worker_loop(Queue<T>* eq, Queue<T>* cq) {
         while (true) {
             T task;
             if (!eq->try_pop(task)) {
@@ -138,14 +130,13 @@ public:
                 DEBUG_NODE_PRINT("Worker " << pthread_self() << " pushing EOS to collector");
                 break;
             }
-            U result = this->run(task);
+            T result = this->run(task);
             cq->push(result);
         }
     }
 
     // Loop function for FarmCollector nodes
-    void farm_collector_loop(Queue<T>* eq, Queue<U>* cq) {
-        auto EOS = get_EOS();
+    void farm_collector_loop(Queue<T>* eq, Queue<T>* cq) {
         while (true) {
             T task;
             if (!eq->try_pop(task)) {
@@ -159,17 +150,16 @@ public:
                     break;
                 }
             } else {
-                U result = this->run(task);
+                T result = this->run(task);
                 cq->push(result);
             }
         }
     }
 
     // Loop function for PipelineEmitter nodes
-    void pipeline_emitter_loop(Queue<T>* eq, Queue<U>* cq) {
-        auto EOS = get_EOS();
+    void pipeline_emitter_loop(Queue<T>* eq, Queue<T>* cq) {
         while (true) {
-            U result = this->run(EOS);
+            T result = this->run(EOS);
             if (result == EOS) {
                 cq->push(EOS);
                 break;
@@ -179,8 +169,7 @@ public:
     }
 
     // Loop function for PipelineStage nodes
-    void pipeline_stage_loop(Queue<T>* eq, Queue<U>* cq) {
-        auto EOS = get_EOS();
+    void pipeline_stage_loop(Queue<T>* eq, Queue<T>* cq) {
         while (true) {
             T task;
             if (!eq->try_pop(task)) {
@@ -191,14 +180,14 @@ public:
                 DEBUG_NODE_PRINT("Stage " << pthread_self() << " pushing EOS to collector");
                 break;
             }
-            U result = this->run(task);
+            T result = this->run(task);
             cq->push(result);
         }
     }
 
     virtual void* thread_function(void *args) {
         Queue<T> *eq = this->get_input_queue();
-        Queue<U> *cq = this->get_output_queue();
+        Queue<T> *cq = this->get_output_queue();
 
         switch (this->node_type) {
             case NodeType::FarmEmitter:
@@ -240,7 +229,7 @@ public:
     }
 
     // Run the task (to be implemented by the user)
-    virtual U run(T task) = 0;
+    virtual T run(T task) = 0;
 };
 
 #endif //PPL_NODE_HPP
