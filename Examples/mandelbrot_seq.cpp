@@ -6,7 +6,7 @@
 using namespace std;
 using namespace EasyBMP;
 
-class Mandelbrot : public Node {
+class Mandelbrot : public Node <void*> {
 public:
     Mandelbrot(string image_path, int width, int height, int maxIterations, double minReal, double maxReal, double minImag, double maxImag) {
         this->image_path = image_path;
@@ -81,6 +81,6 @@ int main(int argc, char* argv[]) {
 //    int maxIterations = 1000;
     string fname = "mandelbrot_" + to_string(w) + "x" + to_string(h) + ".bmp";
     Mandelbrot mandelbrot(fname, w, h, maxIterations, -2, 1, -1, 1);
-    mandelbrot.run(NULL);
+    mandelbrot.run(nullptr);
     return 0;
 }

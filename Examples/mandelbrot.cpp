@@ -67,7 +67,7 @@ public:
     }
 };
 
-class MandelbrotEmitter : public Node {
+class MandelbrotEmitter : public Node <void*> {
 public:
     MandelbrotEmitter(int width, int height, int numRowChunks, int numColChunks, int maxIterations)
             : width(width), height(height), numRowChunks(numRowChunks), numColChunks(numColChunks),
@@ -100,7 +100,7 @@ private:
     int maxIterations;
 };
 
-class MandelbrotWorker : public Node {
+class MandelbrotWorker : public Node <void*> {
 public:
     void* run(void* task) override {
 //        cout << "Worker received chunk" << endl;
@@ -114,7 +114,7 @@ public:
     }
 };
 
-class MandelbrotCollector : public Node {
+class MandelbrotCollector : public Node <void*> {
 public:
     MandelbrotCollector(int totalWidth, int totalHeight, int numRowChunks, int numColChunks, const string& image_path)
             : totalWidth(totalWidth), totalHeight(totalHeight), numRowChunks(numRowChunks), numColChunks(numColChunks),
@@ -173,7 +173,7 @@ int main(int argc, char* argv[]) {
 
     string fname = "mandelbrot_" + to_string(width) + "x" + to_string(height) + ".bmp";
 
-    FarmManager *farm = new FarmManager();
+    FarmManager<void*> *farm = new FarmManager<void*>();
     MandelbrotEmitter *emitter = new MandelbrotEmitter(width, height, numRowChunks, numColChunks, maxIterations);
     MandelbrotCollector *collector = new MandelbrotCollector(width, height, numRowChunks, numColChunks, fname);
 

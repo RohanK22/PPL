@@ -9,13 +9,14 @@ import os
 import time
 
 # EXEC Paths
-FARM_MANDELBROT_EXEC = os.path.join('../cmake-build-debug', 'mandelbrot')
-SEQ_MANDELBROT_EXEC = os.path.join('../cmake-build-debug', 'mandelbrot_seq')
+FARM_MANDELBROT_EXEC = os.path.join('../build', 'mandelbrot')
+SEQ_MANDELBROT_EXEC = os.path.join('../build', 'mandelbrot_seq')
 
 # Parameters
 SAMPLES = 5
-problem_sizes = [(1024, 1024, 1000), (2048, 2048, 1000), (4096, 4096, 1000)]
-num_workers_list = [2, 4, 6, 8]
+problem_sizes = [(200, 200, 1000), (400, 400, 1000), (800, 800, 1000), (1600, 1600, 1000), (3200, 3200, 1000)]
+# [(1024, 1024, 1000), (2048, 2048, 1000), (4096, 4096, 1000)]
+num_workers_list = [1, 2, 4, 6, 8, 12, 14, 16, 18, 20, 22, 24, 26, 28]
 
 # Function to run Mandelbrot and measure elapsed time
 def run_mandelbrot(exec_path, *args):

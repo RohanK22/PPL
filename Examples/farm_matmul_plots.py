@@ -5,14 +5,14 @@ import os
 import time
 
 # EXEC Paths
-FARM_MATMUL_EXEC = os.path.join('../cmake-build-debug', 'farm_matmul')
-SEQ_MATMUL_EXEC = os.path.join('../cmake-build-debug', 'seq_matmul')
+FARM_MATMUL_EXEC = os.path.join('../build', 'farm_matmul')
+SEQ_MATMUL_EXEC = os.path.join('../build', 'seq_matmul')
 
 # Parameters
-SAMPLES = 10
+SAMPLES = 5
 matrix_dimensions = [128, 256, 512, 1024]
     #[512, 1024, 2048]
-num_workers_list = [2, 4, 6, 8]
+num_workers_list = [1, 2, 4, 6, 8, 12, 14, 16, 18, 20, 22, 24, 26, 28]
 
 # Function to run Matrix Multiplication and measure elapsed time
 def run_matmul(exec_path, *args):
@@ -42,9 +42,9 @@ for dim in matrix_dimensions:
 
 # Show legend, title, and labels
 plt.legend()
-plt.title('Speedup vs Number of Workers for Different Matrix Dimensions')
-plt.xlabel('Number of Workers')
-plt.ylabel('Speedup')
+plt.title('Node-Level Farm Speedup vs Number of Workers for Matrix Multiplication Problem')
+plt.xlabel('Number of Workers (Threads)')
+plt.ylabel('Speedup (Time_seq / Time_farm)')
 plt.grid(True)
 plt.show()
 

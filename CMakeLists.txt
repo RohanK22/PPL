@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.22)
 project(ppl)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -120,79 +120,79 @@ add_executable(nested_farm_in_pipeline_gaussian_blur
         Examples/nested_farm_in_pipeline_gaussian_blur.cpp
 )
 
-# Boost MPI test
-include_directories(${Boost_INCLUDE_DIRS})
-find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
-add_executable(boost_mpi_test
-        ${COMMON_SOURCES}
-        MPI_Examples/boost_mpi_test.cpp
-)
-target_link_libraries(boost_mpi_test
-        ${Boost_LIBRARIES}
-        MPI::MPI_CXX
-)
+# # Boost MPI test
+# include_directories(${Boost_INCLUDE_DIRS})
+# find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
+# add_executable(boost_mpi_test
+#         ${COMMON_SOURCES}
+#         MPI_Examples/boost_mpi_test.cpp
+# )
+# target_link_libraries(boost_mpi_test
+#         ${Boost_LIBRARIES}
+#         MPI::MPI_CXX
+# )
 
-# MPI Examples
-# Mandelbrot
-include_directories(${Boost_INCLUDE_DIRS})
-find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
-add_executable(mpi_mandelbrot
-        ${COMMON_SOURCES}
-        MPI_Examples/mandelbrot.cpp
-)
-target_link_libraries(mpi_mandelbrot
-        ${Boost_LIBRARIES}
-        MPI::MPI_CXX
-)
+# # MPI Examples
+# # Mandelbrot
+# include_directories(${Boost_INCLUDE_DIRS})
+# find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
+# add_executable(mpi_mandelbrot
+#         ${COMMON_SOURCES}
+#         MPI_Examples/mandelbrot.cpp
+# )
+# target_link_libraries(mpi_mandelbrot
+#         ${Boost_LIBRARIES}
+#         MPI::MPI_CXX
+# )
 
-# pipline_test
-include_directories(${Boost_INCLUDE_DIRS})
-find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
-add_executable(mpi_pipeline_test
-        ${COMMON_SOURCES}
-        MPI_Examples/pipeline_test.cpp
-)
-target_link_libraries(mpi_pipeline_test
-        ${Boost_LIBRARIES}
-        MPI::MPI_CXX
-)
+# # pipline_test
+# include_directories(${Boost_INCLUDE_DIRS})
+# find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
+# add_executable(mpi_pipeline_test
+#         ${COMMON_SOURCES}
+#         MPI_Examples/pipeline_test.cpp
+# )
+# target_link_libraries(mpi_pipeline_test
+#         ${Boost_LIBRARIES}
+#         MPI::MPI_CXX
+# )
 
-# farm_test
-include_directories(${Boost_INCLUDE_DIRS})
-find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
-add_executable(mpi_farm_test
-        ${COMMON_SOURCES}
-        MPI_Examples/farm_test.cpp
-)
-target_link_libraries(mpi_farm_test
-        ${Boost_LIBRARIES}
-        MPI::MPI_CXX
-)
+# # farm_test
+# include_directories(${Boost_INCLUDE_DIRS})
+# find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
+# add_executable(mpi_farm_test
+#         ${COMMON_SOURCES}
+#         MPI_Examples/farm_test.cpp
+# )
+# target_link_libraries(mpi_farm_test
+#         ${Boost_LIBRARIES}
+#         MPI::MPI_CXX
+# )
 
-# Nested Farm in MPI Farm
-# farm_test -- Factorials
-include_directories(${Boost_INCLUDE_DIRS})
-find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
-add_executable(nested_farm_in_mpi_farm
-        ${COMMON_SOURCES}
-        MPI_Examples/nested_farm_in_mpi_farm.cpp
-)
-target_link_libraries(nested_farm_in_mpi_farm
-        ${Boost_LIBRARIES}
-        MPI::MPI_CXX
-)
+# # Nested Farm in MPI Farm
+# # farm_test -- Factorials
+# include_directories(${Boost_INCLUDE_DIRS})
+# find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
+# add_executable(nested_farm_in_mpi_farm
+#         ${COMMON_SOURCES}
+#         MPI_Examples/nested_farm_in_mpi_farm.cpp
+# )
+# target_link_libraries(nested_farm_in_mpi_farm
+#         ${Boost_LIBRARIES}
+#         MPI::MPI_CXX
+# )
 
-# Nested Farm in MPI Farm -- Montecarlo PI
-include_directories(${Boost_INCLUDE_DIRS})
-find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
-add_executable(nested_farm_in_mpi_farm_monte_carlo
-        ${COMMON_SOURCES}
-        MPI_Examples/monte_carlo_pi.cpp
-)
-target_link_libraries(nested_farm_in_mpi_farm_monte_carlo
-        ${Boost_LIBRARIES}
-        MPI::MPI_CXX
-)
+# # Nested Farm in MPI Farm -- Montecarlo PI
+# include_directories(${Boost_INCLUDE_DIRS})
+# find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
+# add_executable(nested_farm_in_mpi_farm_monte_carlo
+#         ${COMMON_SOURCES}
+#         MPI_Examples/monte_carlo_pi.cpp
+# )
+# target_link_libraries(nested_farm_in_mpi_farm_monte_carlo
+#         ${Boost_LIBRARIES}
+#         MPI::MPI_CXX
+# )
 
-#mpic++ -I/path/to/boost/mpi my_application.cpp -Llibdir \
-#  -lboost_mpi -lboost_serialization
+# #mpic++ -I/path/to/boost/mpi my_application.cpp -Llibdir \
+# #  -lboost_mpi -lboost_serialization

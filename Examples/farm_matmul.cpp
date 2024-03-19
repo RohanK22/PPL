@@ -33,7 +33,7 @@ public:
     }
 };
 
-class MatrixMultiplicationEmitter : public Node {
+class MatrixMultiplicationEmitter : public Node <void*> {
 public:
     MatrixMultiplicationEmitter(int dim, int numChunks, double **a, double **b, double **res)
             : dim(dim), numChunks(numChunks), a(a), b(b), res(res) {}
@@ -62,7 +62,7 @@ private:
     double **res;
 };
 
-class MatrixMultiplicationWorker : public Node {
+class MatrixMultiplicationWorker : public Node <void*> {
 public:
     void* run(void* task) override {
         MatrixMultiplicationTask* multiplicationTask = (MatrixMultiplicationTask*)task;
@@ -73,7 +73,7 @@ public:
     }
 };
 
-class MatrixMultiplicationCollector : public Node {
+class MatrixMultiplicationCollector : public Node <void*> {
 public:
     MatrixMultiplicationCollector(int dim, double **res) : dim(dim), res(res) {}
 
@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
     auto t1 = chrono::high_resolution_clock::now();
 
     // Farm parallel pattern
-    FarmManager* farm = new FarmManager();
+    FarmManager<void*>* farm = new FarmManager<void*>();
     MatrixMultiplicationEmitter* emitter = new MatrixMultiplicationEmitter(dim, num_workers, a, b, res);
     MatrixMultiplicationCollector* collector = new MatrixMultiplicationCollector(dim, res);
 

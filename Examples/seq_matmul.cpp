@@ -1,11 +1,12 @@
 // Sequential square matrix multiplication
 
 #include <iostream>
+#include <chrono>
 
 using namespace std;
 
 int main(int argc, char *argv[]) {
-    if (argc != 3) {
+    if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " <matrix_dim>" << std::endl;
         return 1;
     }
