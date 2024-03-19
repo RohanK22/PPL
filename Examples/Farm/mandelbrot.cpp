@@ -1,13 +1,13 @@
 #include <iostream>
 #include <vector>
-#include "../src/Node.hpp"
-#include "../src/FarmManager.hpp"
-#include "../src/EasyBMP.hpp"
+#include "../../src/Node.hpp"
+#include "../../src/FarmManager.hpp"
+#include "../../src/EasyBMP.hpp"
 
 using namespace std;
 using namespace EasyBMP;
 
-class JuliaSetChunk {
+class MandelbrotChunk {
 public:
     int startRow;
     int endRow;
@@ -15,23 +15,23 @@ public:
     int endCol;
     int width;
     int height;
-    int maxIterations;
     double minReal;
     double maxReal;
     double minImag;
     double maxImag;
-    double cReal;
-    double cImag;
+    int maxIterations;
 
-    vector<vector<RGBColor>> colors;  // 2D array to store RGB colors
+    vector<vector<RGBColor> > colors;  // 2D array to store RGB colors
 
-    JuliaSetChunk(int startRow, int endRow, int startCol, int endCol, int width, int height,
-                  int maxIterations, double minReal, double maxReal, double minImag, double maxImag, double cReal, double cImag)
+    MandelbrotChunk(int startRow, int endRow, int startCol, int endCol, int width, int height,
+                    double minReal, double maxReal, double minImag, double maxImag, int maxIterations)
             : startRow(startRow), endRow(endRow), startCol(startCol), endCol(endCol),
-              width(width), height(height), maxIterations(maxIterations), minReal(minReal), maxReal(maxReal),
-              minImag(minImag), maxImag(maxImag), cReal(cReal), cImag(cImag) {
+              width(width), height(height), minReal(minReal), maxReal(maxReal),
+              minImag(minImag), maxImag(maxImag), maxIterations(maxIterations) {
         // Initialize the 2D array with dimensions (width x height)
-        colors.resize(width, vector<RGBColor>(height, RGBColor(255, 255, 255)));
+        int chunk_width = endCol - startCol;
+        int chunk_height = endRow - startRow;
+        colors.resize(chunk_width, vector<RGBColor>(chunk_height));
     }
 
     void populateColors() {
@@ -45,11 +45,11 @@ public:
 
                 int n;
                 for (n = 0; n < maxIterations; n++) {
-                    double zReal2 = zReal * zReal - zImag * zImag + cReal;
-                    double zImag2 = 2 * zReal * zImag + cImag;
+                    double zReal2 = zReal * zReal - zImag * zImag;
+                    double zImag2 = 2 * zReal * zImag;
 
-                    zReal = zReal2;
-                    zImag = zImag2;
+                    zReal = zReal2 + real;
+                    zImag = zImag2 + imag;
 
                     if (zReal * zReal + zImag * zImag > 4) {
                         break;
@@ -67,13 +67,11 @@ public:
     }
 };
 
-class JuliaSetEmitter : public Node {
+class MandelbrotEmitter : public Node <void*> {
 public:
-    JuliaSetEmitter(int width, int height, int numRowChunks, int numColChunks, int maxIterations,
-                    double minReal, double maxReal, double minImag, double maxImag, double cReal, double cImag)
+    MandelbrotEmitter(int width, int height, int numRowChunks, int numColChunks, int maxIterations)
             : width(width), height(height), numRowChunks(numRowChunks), numColChunks(numColChunks),
-              maxIterations(maxIterations), minReal(minReal), maxReal(maxReal), minImag(minImag),
-              maxImag(maxImag), cReal(cReal), cImag(cImag) {}
+              maxIterations(maxIterations) {}
 
     void* run(void* task) override {
         int rowsPerChunk = height / numRowChunks;
@@ -86,8 +84,7 @@ public:
                 int startCol = j * colsPerChunk;
                 int endCol = (j == numColChunks - 1) ? width : startCol + colsPerChunk;
 
-                JuliaSetChunk* chunk = new JuliaSetChunk(startRow, endRow, startCol, endCol, width, height,
-                                                         maxIterations, minReal, maxReal, minImag, maxImag, cReal, cImag);
+                MandelbrotChunk* chunk = new MandelbrotChunk(startRow, endRow, startCol, endCol, width, height, -2, 1, -1, 1, maxIterations);
                 this->get_output_queue()->push((void*)chunk);
             }
         }
@@ -101,19 +98,13 @@ private:
     int numRowChunks;
     int numColChunks;
     int maxIterations;
-    double minReal;
-    double maxReal;
-    double minImag;
-    double maxImag;
-    double cReal;
-    double cImag;
 };
 
-class JuliaSetWorker : public Node {
+class MandelbrotWorker : public Node <void*> {
 public:
     void* run(void* task) override {
-        cout << "Worker received chunk" << endl;
-        JuliaSetChunk* chunk = (JuliaSetChunk*)task;
+//        cout << "Worker received chunk" << endl;
+        MandelbrotChunk* chunk = (MandelbrotChunk*)task;
 
         // Populate the colors in the chunk
         chunk->populateColors();
@@ -123,17 +114,17 @@ public:
     }
 };
 
-class JuliaSetCollector : public Node {
+class MandelbrotCollector : public Node <void*> {
 public:
-    JuliaSetCollector(int totalWidth, int totalHeight, int numRowChunks, int numColChunks, const string& image_path)
+    MandelbrotCollector(int totalWidth, int totalHeight, int numRowChunks, int numColChunks, const string& image_path)
             : totalWidth(totalWidth), totalHeight(totalHeight), numRowChunks(numRowChunks), numColChunks(numColChunks),
               image_path(image_path),
-              finalImage(totalWidth, totalHeight, RGBColor(255, 255, 255)) {}
+              finalImage(totalWidth, totalHeight, EasyBMP::RGBColor(255, 255, 255)) {}
 
     void* run(void* task) override {
-        JuliaSetChunk* chunk = (JuliaSetChunk*)task;
+        MandelbrotChunk* chunk = (MandelbrotChunk*)task;
 
-        cout << "Collector received chunk" << endl;
+//        cout << "Collector received chunk" << endl;
 
         // Copy colors from the chunk to the final image
         for (int x = chunk->startCol; x < chunk->endCol; x++) {
@@ -143,14 +134,16 @@ public:
         }
 
         received++;
-        cout << "Progress % " << (received * 100) / numChunks << endl;
+//        cout << "Progress % " << (received * 100) / numChunks << endl;
 
         if (received == numChunks) {
-            cout << "Saving image to " << image_path << endl;
+//            cout << "Saving image to " << image_path << endl;
             finalImage.Write(image_path);
+
+            return nullptr;
         }
 
-        return nullptr;
+        return (void*)chunk;
     }
 
 private:
@@ -159,15 +152,15 @@ private:
     int numRowChunks;
     int numColChunks;
     string image_path;
-    Image finalImage;
+    EasyBMP::Image finalImage;
     int received = 0;
     int numChunks = numRowChunks * numColChunks;  // Assuming this variable is accessible here
 };
 
 int main(int argc, char* argv[]) {
-    // Read parameters from the command line
+    // Read width, height, maxIterations, numRowChunks, numColChunks, numWorkers from command line
     if (argc != 7) {
-        cout << "Usage: ./julia_set <width> <height> <maxIterations> <numRowChunks> <numColChunks> <numWorkers>" << endl;
+        cout << "Usage: ./mandelbrot <width> <height> <maxIterations> <numRowChunks> <numColChunks> <numWorkers>" << endl;
         return 1;
     }
 
@@ -177,23 +170,22 @@ int main(int argc, char* argv[]) {
     int numRowChunks = stoi(argv[4]);
     int numColChunks = stoi(argv[5]);
     int numWorkers = stoi(argv[6]);
-    double cReal = -0.7;
-    double cImag = 0.27015;
-    string image_path = "julia_" + to_string(width) + "x" + to_string(height) + ".bmp";
 
-    FarmManager* farm = new FarmManager();
-    JuliaSetEmitter* emitter = new JuliaSetEmitter(width, height, numRowChunks, numColChunks, maxIterations, -2, 2, -1.5, 1.5, cReal, cImag);
-    JuliaSetCollector* collector = new JuliaSetCollector(width, height, numRowChunks, numColChunks, image_path);
+    string fname = "mandelbrot_" + to_string(width) + "x" + to_string(height) + ".bmp";
+
+    FarmManager<void*> *farm = new FarmManager<void*>();
+    MandelbrotEmitter *emitter = new MandelbrotEmitter(width, height, numRowChunks, numColChunks, maxIterations);
+    MandelbrotCollector *collector = new MandelbrotCollector(width, height, numRowChunks, numColChunks, fname);
 
     farm->add_emitter(emitter);
     farm->add_collector(collector);
 
     for (int i = 0; i < numWorkers; i++) {
-        JuliaSetWorker* worker = new JuliaSetWorker();
+        MandelbrotWorker *worker = new MandelbrotWorker();
         farm->add_worker(worker);
     }
 
-    farm->run(nullptr);
+    farm->run_until_finish();
 
     return 0;
 }

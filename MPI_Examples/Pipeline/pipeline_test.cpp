@@ -1,6 +1,6 @@
 
 #include <iostream>
-#include "../src/MPIPipelineManager.hpp"
+#include "../../src/MPIPipelineManager.hpp"
 #include <vector>
 #include <numeric>
 #include <sstream>

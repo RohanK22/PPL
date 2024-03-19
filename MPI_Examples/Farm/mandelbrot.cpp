@@ -1,8 +1,8 @@
 #include <iostream>
 #include <vector>
-#include "../src/MPINode.hpp"
-#include "../src/MPIFarmManager.hpp"
-#include "../src/EasyBMP.hpp"
+#include "../../src/MPINode.hpp"
+#include "../../src/MPIFarmManager.hpp"
+#include "../../src/EasyBMP.hpp"
 #include <boost/mpi.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>

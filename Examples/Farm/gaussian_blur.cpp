@@ -1,9 +1,7 @@
 #include <iostream>
-#include "../src/PipelineManager.hpp"
-#include "../src/FarmManager.hpp"
-#include "../src/EasyBMP.hpp"
+#include "../../src/PipelineManager.hpp"
+#include "../../src/EasyBMP.hpp"
 #include <filesystem>
-
 
 using namespace std;
 using namespace EasyBMP;
@@ -15,7 +13,7 @@ public:
         this->set_is_pipeline_emitter(true);
     }
 
-    void* run(void*) {
+    void* run(void*) override {
         // Iterate through the images in the specified folder
         for (const auto& entry : fs::directory_iterator(folder_path)) {
             string image_path = entry.path().string();
@@ -32,7 +30,7 @@ private:
 
 class GrayscaleConverter : public Node {
 public:
-    void* run(void* task) {
+    void* run(void* task) override {
         EasyBMP::Image* image = static_cast<EasyBMP::Image*>(task);
 
         cout << "Converting image to grayscale" << endl;
@@ -50,9 +48,9 @@ public:
     }
 };
 
-class GaussianBlurWorker : public Node {
+class GaussianBlur : public Node {
 public:
-    void* run(void* task) {
+    void* run(void* task) override {
         EasyBMP::Image* image = static_cast<EasyBMP::Image*>(task);
         EasyBMP::Image* blurred_image = new EasyBMP::Image(image->TellWidth(), image->TellHeight());
 
@@ -93,9 +91,7 @@ class ImageWriter : public Node {
 public:
     ImageWriter(const string& output_path) : output_path(output_path) {}
 
-    void* run(void* task) {
-        cout << "Final stage!!!! Writing image to " << output_path << endl;
-
+    void* run(void* task) override {
         EasyBMP::Image* image = static_cast<EasyBMP::Image*>(task);
 
         cout << "Writing image to " << output_path << endl;
@@ -103,7 +99,7 @@ public:
         image->Write(output_path.c_str() + to_string(receive_count) + ".bmp");
         delete image;  // Clean up memory
         receive_count++;
-        return (void*) std::to_string(receive_count).c_str();
+        return nullptr;
     }
 
 private:
@@ -112,41 +108,28 @@ private:
 };
 
 int main(int argc, char* argv[]) {
-    if (argc != 4) {
-        cout << "Usage: ./gaussian_blur <input_image_path> <output_image_path> <blur_farm_num_workers>" << endl;
+    if (argc != 3) {
+        cout << "Usage: ./gaussian_blur <input_image_path> <output_image_path>" << endl;
         return 1;
     }
 
     string input_image_path = argv[1];
     string output_image_path = argv[2];
-    int num_workers = stoi(argv[3]);
 
     PipelineManager* pipeline = new PipelineManager();
     ImageReader* image_reader = new ImageReader(input_image_path);
     GrayscaleConverter* grayscale_converter = new GrayscaleConverter();
-
-    // Make a farm of GaussianBlurWorkers
-    FarmManager* gaussian_blur_farm = new FarmManager();
-
-//    GaussianBlur* gaussian_blur = new GaussianBlur();
-
-
+    GaussianBlur* gaussian_blur = new GaussianBlur();
     ImageWriter* image_writer = new ImageWriter(output_image_path);
 
     pipeline->add_stage(image_reader);
     pipeline->add_stage(grayscale_converter);
-    pipeline->add_stage(gaussian_blur_farm);
-
-    for (int i = 0; i < num_workers; i++) {
-        GaussianBlurWorker* gaussian_blur_worker = new GaussianBlurWorker();
-        gaussian_blur_farm->add_worker(gaussian_blur_worker);
-    }
-
+    pipeline->add_stage(gaussian_blur);
     pipeline->add_stage(image_writer);
 
     cout << "Number of stages: " << pipeline->get_num_pipeline_stages() << endl;
 
-    pipeline->run_until_finish();
+    pipeline->run(nullptr);
 
     return 0;
 }

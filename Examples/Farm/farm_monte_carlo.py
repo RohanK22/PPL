@@ -4,8 +4,8 @@ import time
 import numpy as np
 
 # EXEC Paths
-FARM_PI_EXEC = os.path.join('../cmake-build-debug', 'farm_monte_carlo')
-SEQ_PI_EXEC = os.path.join('../cmake-build-debug', 'seq_monte_carlo')
+FARM_PI_EXEC = os.path.join('../../cmake-build-debug', 'farm_monte_carlo')
+SEQ_PI_EXEC = os.path.join('../../cmake-build-debug', 'seq_monte_carlo')
 
 # Parameters
 SAMPLES = 10

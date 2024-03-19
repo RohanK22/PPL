@@ -3,8 +3,8 @@ import os
 import time
 
 # EXEC Paths
-FARM_DOT_EXEC = os.path.join('../cmake-build-debug', 'farm_dot_product')
-SEQ_DOT_EXEC = os.path.join('../cmake-build-debug', 'seq_dot_product')
+FARM_DOT_EXEC = os.path.join('../../cmake-build-debug', 'farm_dot_product')
+SEQ_DOT_EXEC = os.path.join('../../cmake-build-debug', 'seq_dot_product')
 
 # Parameters
 SAMPLES = 10

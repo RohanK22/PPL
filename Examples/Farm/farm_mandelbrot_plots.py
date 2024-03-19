@@ -9,8 +9,8 @@ import os
 import time
 
 # EXEC Paths
-FARM_MANDELBROT_EXEC = os.path.join('../build', 'mandelbrot')
-SEQ_MANDELBROT_EXEC = os.path.join('../build', 'mandelbrot_seq')
+FARM_MANDELBROT_EXEC = os.path.join('../../build', 'mandelbrot')
+SEQ_MANDELBROT_EXEC = os.path.join('../../build', 'mandelbrot_seq')
 
 # Parameters
 SAMPLES = 5

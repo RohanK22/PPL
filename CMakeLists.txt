@@ -43,92 +43,92 @@ set(COMMON_SOURCES
 # Executable target: farm_test
 add_executable(farm_test
         ${COMMON_SOURCES}
-        Examples/farm_test.cpp
+        Examples/Farm/farm_test.cpp
 )
 
 # Executable target: julia
 add_executable(julia
         ${COMMON_SOURCES}
-        Examples/julia.cpp
+        Examples/Farm/julia.cpp
 )
 
 # Executable target: julia_seq
 add_executable(julia_seq
         ${COMMON_SOURCES}
-        Examples/julia_seq.cpp
+        Examples/Farm/julia_seq.cpp
 )
 
 # Executable target: mandelbrot
 add_executable(mandelbrot
         ${COMMON_SOURCES}
-        Examples/mandelbrot.cpp
+        Examples/Farm/mandelbrot.cpp
 )
 
 # Executable target: mandelbrot_seq
 add_executable(mandelbrot_seq
         ${COMMON_SOURCES}
-        Examples/mandelbrot_seq.cpp
+        Examples/Farm/mandelbrot_seq.cpp
 )
 
 # Executable target: pipeline_test
 add_executable(pipeline_test
         ${COMMON_SOURCES}
-        Examples/pipeline_test.cpp
+        Examples/Pipeline/pipeline_test.cpp
 )
 
 # Executable target: pipeline_text_processing
 add_executable(pipeline_text_processing
         ${COMMON_SOURCES}
-        Examples/pipeline_text_processing.cpp
+        Examples/Pipeline/pipeline_text_processing.cpp
 )
 
 # Executable target: gaussian_blur
 add_executable(gaussian_blur
         ${COMMON_SOURCES}
-        Examples/gaussian_blur.cpp
+        Examples/Farm/gaussian_blur.cpp
 )
 
 # Executable target: farm_matmul
 add_executable(farm_matmul
         ${COMMON_SOURCES}
-        Examples/farm_matmul.cpp
+        Examples/Farm/farm_matmul.cpp
 )
 
 # Executable target: seq_matmul
 add_executable(seq_matmul
         ${COMMON_SOURCES}
-        Examples/seq_matmul.cpp
+        Examples/Farm/seq_matmul.cpp
 )
 
 # Executable target: farm_dot_product
 add_executable(farm_dot_product
         ${COMMON_SOURCES}
-        Examples/farm_dot_product.cpp
+        Examples/Farm/farm_dot_product.cpp
 )
 
 # Executable target: seq_dot_product
 add_executable(seq_dot_product
         ${COMMON_SOURCES}
-        Examples/seq_dot_product.cpp
+        Examples/Farm/seq_dot_product.cpp
 )
 
 # Executable target: farm_monte_carlo
 add_executable(farm_monte_carlo
         ${COMMON_SOURCES}
-        Examples/farm_monte_carlo.cpp
+        Examples/Farm/farm_monte_carlo.cpp
 )
 
 # Executable target: seq_monte_carlo
 add_executable(seq_monte_carlo
         ${COMMON_SOURCES}
-        Examples/seq_monte_carlo.cpp
+        Examples/Farm/seq_monte_carlo.cpp
 )
 
 # Nested Farm in Pipeline
 # nexted_farm_in_pipeline_gaussian_blur
 add_executable(nested_farm_in_pipeline_gaussian_blur
         ${COMMON_SOURCES}
-        Examples/nested_farm_in_pipeline_gaussian_blur.cpp
+        Examples/Pipeline/nested_farm_in_pipeline_gaussian_blur.cpp
 )
 
 # Boost MPI test
@@ -149,7 +149,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
 add_executable(mpi_mandelbrot
         ${COMMON_SOURCES}
-        MPI_Examples/mandelbrot.cpp
+        MPI_Examples/Farm/mandelbrot.cpp
 )
 target_link_libraries(mpi_mandelbrot
         ${Boost_LIBRARIES}
@@ -161,7 +161,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
 add_executable(mpi_pipeline_test
         ${COMMON_SOURCES}
-        MPI_Examples/pipeline_test.cpp
+        MPI_Examples/Pipeline/pipeline_test.cpp
 )
 target_link_libraries(mpi_pipeline_test
         ${Boost_LIBRARIES}
@@ -173,7 +173,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
 add_executable(mpi_farm_test
         ${COMMON_SOURCES}
-        MPI_Examples/farm_test.cpp
+        MPI_Examples/Farm/farm_test.cpp
 )
 target_link_libraries(mpi_farm_test
         ${Boost_LIBRARIES}
@@ -186,7 +186,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
 add_executable(nested_farm_in_mpi_farm
         ${COMMON_SOURCES}
-        MPI_Examples/nested_farm_in_mpi_farm.cpp
+        MPI_Examples/Farm/nested_farm_in_mpi_farm.cpp
 )
 target_link_libraries(nested_farm_in_mpi_farm
         ${Boost_LIBRARIES}
@@ -198,7 +198,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)
 add_executable(nested_farm_in_mpi_farm_monte_carlo
         ${COMMON_SOURCES}
-        MPI_Examples/monte_carlo_pi.cpp
+        MPI_Examples/Farm/monte_carlo_pi.cpp
 )
 target_link_libraries(nested_farm_in_mpi_farm_monte_carlo
         ${Boost_LIBRARIES}

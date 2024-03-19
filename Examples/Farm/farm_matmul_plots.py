@@ -5,8 +5,8 @@ import os
 import time
 
 # EXEC Paths
-FARM_MATMUL_EXEC = os.path.join('../build', 'farm_matmul')
-SEQ_MATMUL_EXEC = os.path.join('../build', 'seq_matmul')
+FARM_MATMUL_EXEC = os.path.join('../../build', 'farm_matmul')
+SEQ_MATMUL_EXEC = os.path.join('../../build', 'seq_matmul')
 
 # Parameters
 SAMPLES = 5

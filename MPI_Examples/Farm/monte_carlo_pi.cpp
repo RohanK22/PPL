@@ -37,8 +37,8 @@
 
 #include <iostream>
 #include <cmath>
-#include "../src/FarmManager.hpp"
-#include "../src/MPIFarmManager.hpp"
+#include "../../src/FarmManager.hpp"
+#include "../../src/MPIFarmManager.hpp"
 #include <boost/mpi.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>

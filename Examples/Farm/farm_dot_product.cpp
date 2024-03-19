@@ -4,7 +4,7 @@
 
 #include <iostream>
 #include <vector>
-#include "../src/FarmManager.hpp"
+#include "../../src/FarmManager.hpp"
 
 class VectorDotProductTask {
 public:
