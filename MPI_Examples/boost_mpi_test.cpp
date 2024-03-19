@@ -2,9 +2,9 @@
 #include <iostream>
 #include <vector>
 #include <cstdlib>
-#include "../MPIFarmManager.hpp"
-#include "../MPINode.hpp"
-#include "../Node.hpp"
+#include "../src/MPIFarmManager.hpp"
+#include "../src/MPINode.hpp"
+#include "../src/Node.hpp"
 
 namespace mpi = boost::mpi;
 

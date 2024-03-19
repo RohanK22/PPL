@@ -4,8 +4,8 @@
 #include <iostream>
 #include <chrono>
 #include <vector>
-#include "../Node.hpp"
-#include "../FarmManager.hpp"
+#include "../src/Node.hpp"
+#include "../src/FarmManager.hpp"
 
 using namespace std;
 

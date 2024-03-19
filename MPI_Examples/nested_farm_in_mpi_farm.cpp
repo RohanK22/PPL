@@ -3,10 +3,10 @@
 // mpiexec -np 5 ./cmake-build-debug/nested_farm_in_mpi_farm
 
 #include <iostream>
-#include "../MPIFarmManager.hpp"
+#include "../src/MPIFarmManager.hpp"
 //#include "../MPINode.hpp"
-#include "../FarmManager.hpp"
-#include "../Timer.hpp"
+#include "../src/FarmManager.hpp"
+#include "../src/Timer.hpp"
 #include <algorithm>
 #include <boost/mpi.hpp>
 #include <boost/archive/text_oarchive.hpp>

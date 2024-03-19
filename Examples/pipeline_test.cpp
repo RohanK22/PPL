@@ -1,6 +1,6 @@
 #include <iostream>
 //#include "../FarmManager.hpp"
-#include "../PipelineManager.hpp"
+#include "../src/PipelineManager.hpp"
 #include <vector>
 #include <numeric>
 

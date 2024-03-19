@@ -1,7 +1,7 @@
 // A simple farm example where each worker computes a factorial of a number
 #include <iostream>
-#include "../MPIFarmManager.hpp"
-#include "../Timer.hpp"
+#include "../src/MPIFarmManager.hpp"
+#include "../src/Timer.hpp"
 #include <algorithm>
 #include <boost/mpi.hpp>
 #include <boost/archive/text_oarchive.hpp>

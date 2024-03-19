@@ -1,7 +1,7 @@
 #include <iostream>
-#include "../PipelineManager.hpp"
-#include "../FarmManager.hpp"
-#include "../EasyBMP.hpp"
+#include "../src/PipelineManager.hpp"
+#include "../src/FarmManager.hpp"
+#include "../src/EasyBMP.hpp"
 #include <filesystem>
 
 

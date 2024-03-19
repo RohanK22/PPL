@@ -1,7 +1,7 @@
 // We will try to use the pipeline to process a bunch of text files and count the number of words in each file.
 
 #include <iostream>
-#include "../PipelineManager.hpp"
+#include "../src/PipelineManager.hpp"
 #include <filesystem>
 #include <fstream>
 #include <vector>

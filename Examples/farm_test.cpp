@@ -1,7 +1,7 @@
 // A simple farm example where each worker computes a factorial of a number
 #include <iostream>
-#include "../FarmManager.hpp"
-#include "../EOSValue.hpp"
+#include "../src/FarmManager.hpp"
+#include "../src/EOSValue.hpp"
 
 using namespace std;
 
