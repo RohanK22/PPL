@@ -1,7 +1,3 @@
-//
-// Created by Rohan Kumar on 20/01/2024.
-//
-
 #ifndef PPL_PIPELINEMANAGER_HPP
 #define PPL_PIPELINEMANAGER_HPP
 
@@ -9,16 +5,18 @@
 #include "Node.hpp"
 #include <vector>
 
-class PipelineManager : public Node {
+template <typename T>
+class PipelineManager : public Node <T> {
 private:
-    std::vector<Node*> pipeline_nodes;
+    std::vector<Node<T> *> pipeline_nodes;
     unsigned int num_pipeline_stages;
-    pthread_t thread;
-    bool is_nested_node = true;
+
+    // EOS type
+    T EOS = this->get_EOS();
 
 public:
     PipelineManager() {
-        this->is_pipeline = true;
+        this->set_type(NodeType::Pipeline);
     }
 
     unsigned int get_num_pipeline_stages() {
@@ -26,47 +24,31 @@ public:
     }
 
     // Add stage to the pipeline
-    void add_stage(Node *node) {
-        node->set_is_pipeline_stage(true);
+    void add_stage(Node<T> *node) {
+        // node->set_is_pipeline_stage(true);
+        if (node->get_node_type() != NodeType::PipelineEmitter) {
+            node->set_type(NodeType::PipelineStage);
+        }
         pipeline_nodes.push_back(node);
         this->num_pipeline_stages = pipeline_nodes.size();
     }
 
-    // TODO: Deprecate this function
-    // If the pipeline is a nested node we need to have a separate distribution_thread that receives and sends tasks to the stages
-    void *thread_function(void *args) override {
-        std::cout << "PipelineManager distribution_thread function " << std::endl;
-        while (true) {
-            void *task = nullptr;
-            bool success = this->get_input_queue()->try_pop(task);
-            if (!success) {
-                continue;
-            }
-            if (task == nullptr) {
-                std::cout << "EOS for Pipe node" << std::endl;
-                break;
-            }
-            pipeline_nodes[0]->get_input_queue()->push(task);
-        }
-        return nullptr;
-    }
-
-    static void* thread_function_helper(void *context) {
-        return static_cast<PipelineManager*>(context)->thread_function(nullptr);
-    }
-
     void start_node() override {
-        // Start node
+        this->set_input_queue(new Queue<T>());
+        this->set_output_queue(new Queue<T>());
+
         for (int i = 0; i < num_pipeline_stages; i ++) {
             if (i == 0) {
                 pipeline_nodes[i]->set_input_queue(this->get_input_queue());
+                pipeline_nodes[i]->set_output_queue(new Queue<T>());
+            } else if (i == num_pipeline_stages - 1) {
+                pipeline_nodes[i]->set_input_queue(pipeline_nodes[i - 1]->get_output_queue());
+                pipeline_nodes[i]->set_output_queue(this->get_output_queue());
             } else {
                 pipeline_nodes[i]->set_input_queue(pipeline_nodes[i - 1]->get_output_queue());
+                pipeline_nodes[i]->set_output_queue(new Queue<T>());
             }
             pipeline_nodes[i]->start_node();
-        }
-        if (is_nested_node) {
-            pthread_create(&this->thread, nullptr, &PipelineManager::thread_function_helper, this);
         }
     }
 
@@ -75,24 +57,20 @@ public:
         for (int i = 0; i < num_pipeline_stages; i ++) {
             pipeline_nodes[i]->join_node();
         }
-        if (is_nested_node) {
-            pthread_join(this->thread, nullptr);
-        }
     }
 
-    // Should never be called
-    void* run(void *task)  {
-        throw std::runtime_error("PipelineManager run should never be called");
+    T run(T task) {
+        // Task from MPI
+        this->get_input_queue()->push(task);
     }
 
     void run_until_finish() {
-        this->is_nested_node = false;
-
-        // Start the pipeline
-        this->start_node();
-
-        // Join the pipeline
-        this->join_node();
+        try {
+            this->start_node();
+            this->join_node();
+        } catch (std::exception &e) {
+            std::cout << "Exception in PipelineManager run_until_finish: " << e.what() << std::endl;
+        }
     }
 };
 

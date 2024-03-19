@@ -43,92 +43,92 @@ set(COMMON_SOURCES
 # Executable target: farm_test
 add_executable(farm_test
         ${COMMON_SOURCES}
-        Examples/Farm/farm_test.cpp
+        Node_Examples/Farm/farm_test.cpp
 )
 
 # Executable target: julia
 add_executable(julia
         ${COMMON_SOURCES}
-        Examples/Farm/julia.cpp
+        Node_Examples/Farm/julia.cpp
 )
 
 # Executable target: julia_seq
 add_executable(julia_seq
         ${COMMON_SOURCES}
-        Examples/Farm/julia_seq.cpp
+        Node_Examples/Farm/julia_seq.cpp
 )
 
 # Executable target: mandelbrot
 add_executable(mandelbrot
         ${COMMON_SOURCES}
-        Examples/Farm/mandelbrot.cpp
+        Node_Examples/Farm/mandelbrot.cpp
 )
 
 # Executable target: mandelbrot_seq
 add_executable(mandelbrot_seq
         ${COMMON_SOURCES}
-        Examples/Farm/mandelbrot_seq.cpp
+        Node_Examples/Farm/mandelbrot_seq.cpp
 )
 
 # Executable target: pipeline_test
 add_executable(pipeline_test
         ${COMMON_SOURCES}
-        Examples/Pipeline/pipeline_test.cpp
+        Node_Examples/Pipeline/pipeline_test.cpp
 )
 
 # Executable target: pipeline_text_processing
 add_executable(pipeline_text_processing
         ${COMMON_SOURCES}
-        Examples/Pipeline/pipeline_text_processing.cpp
+        Node_Examples/Pipeline/pipeline_text_processing.cpp
 )
 
 # Executable target: gaussian_blur
 add_executable(gaussian_blur
         ${COMMON_SOURCES}
-        Examples/Farm/gaussian_blur.cpp
+        Node_Examples/Farm/gaussian_blur.cpp
 )
 
 # Executable target: farm_matmul
 add_executable(farm_matmul
         ${COMMON_SOURCES}
-        Examples/Farm/farm_matmul.cpp
+        Node_Examples/Farm/farm_matmul.cpp
 )
 
 # Executable target: seq_matmul
 add_executable(seq_matmul
         ${COMMON_SOURCES}
-        Examples/Farm/seq_matmul.cpp
+        Node_Examples/Farm/seq_matmul.cpp
 )
 
 # Executable target: farm_dot_product
 add_executable(farm_dot_product
         ${COMMON_SOURCES}
-        Examples/Farm/farm_dot_product.cpp
+        Node_Examples/Farm/farm_dot_product.cpp
 )
 
 # Executable target: seq_dot_product
 add_executable(seq_dot_product
         ${COMMON_SOURCES}
-        Examples/Farm/seq_dot_product.cpp
+        Node_Examples/Farm/seq_dot_product.cpp
 )
 
 # Executable target: farm_monte_carlo
 add_executable(farm_monte_carlo
         ${COMMON_SOURCES}
-        Examples/Farm/farm_monte_carlo.cpp
+        Node_Examples/Farm/farm_monte_carlo.cpp
 )
 
 # Executable target: seq_monte_carlo
 add_executable(seq_monte_carlo
         ${COMMON_SOURCES}
-        Examples/Farm/seq_monte_carlo.cpp
+        Node_Examples/Farm/seq_monte_carlo.cpp
 )
 
 # Nested Farm in Pipeline
 # nexted_farm_in_pipeline_gaussian_blur
 add_executable(nested_farm_in_pipeline_gaussian_blur
         ${COMMON_SOURCES}
-        Examples/Pipeline/nested_farm_in_pipeline_gaussian_blur.cpp
+        Node_Examples/Pipeline/nested_farm_in_pipeline_gaussian_blur.cpp
 )
 
 # Boost MPI test
@@ -143,7 +143,7 @@ target_link_libraries(boost_mpi_test
         MPI::MPI_CXX
 )
 
-# MPI Examples
+# MPI Node_Examples
 # Mandelbrot
 include_directories(${Boost_INCLUDE_DIRS})
 find_package(Boost 1.82.0 REQUIRED COMPONENTS mpi serialization)

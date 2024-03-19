@@ -11,13 +11,13 @@
 using namespace std;
 
 // Reads a file and returns a vector of words for each file
-class FileReader: public Node  {
+class FileReader: public Node <void*> {
 public:
     FileReader(string file_directory_name) {
         this->file_directory_name = file_directory_name;
 
-        // Set as emitter
-        this->set_is_pipeline_emitter(true);
+        // Programmer has to manually set the type of the node to emitter for it to recognize it as an emitter
+        this->set_type(NodeType::PipelineEmitter);
     }
 
     void* run(void*) override {
@@ -35,7 +35,7 @@ public:
             // Push to output queue
             this->get_output_queue()->push((void*) words);
         }
-        return nullptr; // EOS
+        return EOS;
     }
 
 private:
@@ -43,7 +43,7 @@ private:
 };
 
 // Counts the frequency of each word
-class WordCounter: public Node  {
+class WordCounter: public Node <void*> {
 public:
     void* run(void* task) override {
         vector<string> *words = (vector<string> *) task;
@@ -61,7 +61,7 @@ public:
 };
 
 // Prints Top Three most frequent words
-class PrintTopThree: public Node  {
+class PrintTopThree: public Node <void*> {
 public:
     void* run(void* task) override {
         unordered_map<string, int> *word_count = (unordered_map<string, int> *) task;
@@ -85,8 +85,8 @@ private:
 };
 
 int main() {
-    PipelineManager *pipeline = new PipelineManager();
-    FileReader *file_reader = new FileReader("../Examples/pipeline_test2_data");
+    PipelineManager<void*> *pipeline = new PipelineManager<void*>();
+    FileReader *file_reader = new FileReader("../Node_Examples/Pipeline/text_data");
     WordCounter *word_counter = new WordCounter();
     PrintTopThree *print_top_three = new PrintTopThree();
 
@@ -96,6 +96,6 @@ int main() {
 
     cout << "Number of stages: " << pipeline->get_num_pipeline_stages() << endl;
 
-    pipeline->run(nullptr);
+    pipeline->run_until_finish();
     return 0;
 }

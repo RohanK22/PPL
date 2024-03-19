@@ -31,7 +31,7 @@ protected:
 public:
     FarmManager()
     {
-        this->node_type = NodeType::Farm;
+        this->set_type(NodeType::Farm);
     }
 
     // Add emitter node
@@ -213,10 +213,13 @@ public:
         return T();
     }
 
-    void run_until_finish()
-    {
-        this->start_node();
-        this->join_node();
+    void run_until_finish() {
+        try {
+            this->start_node();
+            this->join_node();
+        } catch (std::exception &e) {
+            std::cerr << "Exception in FarmManager run_until_finish: " << e.what() << std::endl;
+        }
     }
 };
 
