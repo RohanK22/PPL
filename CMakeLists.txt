@@ -1,15 +1,26 @@
-cmake_minimum_required(VERSION 3.26)
+# cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.20)
 project(ppl)
 
 set(CMAKE_CXX_STANDARD 23)
 
-# Boost Config
-set(Boost_INCLUDE_DIRS /Users/rohan/Documents/libs/boost_1_82_0/boost)
+# # Boost Config
+# set(Boost_INCLUDE_DIRS /Users/rohan/Documents/libs/boost_1_82_0/boost)
+# set(Boost_USE_STATIC_LIBS ON)  # If you prefer static linking
+# set(Boost_USE_MULTITHREADED ON)
+# set(Boost_LIBRARIES
+#         /Users/rohan/Documents/libs/boost_1_82_0/lib/libboost_mpi.a
+#         /Users/rohan/Documents/libs/boost_1_82_0/lib/libboost_serialization.a
+#         # ... other required Boost libraries if needed
+# )
+
+# Boost config for lab machines
+set(Boost_INCLUDE_DIRS /home/rk76/Documents/OMPI/boost_1_82_0/boost)
 set(Boost_USE_STATIC_LIBS ON)  # If you prefer static linking
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_LIBRARIES
-        /Users/rohan/Documents/libs/boost_1_82_0/lib/libboost_mpi.a
-        /Users/rohan/Documents/libs/boost_1_82_0/lib/libboost_serialization.a
+        /cs/home/rk76/usr/lib/libboost_mpi.a
+        /cs/home/rk76/usr/lib/libboost_serialization.a
         # ... other required Boost libraries if needed
 )
 
