@@ -6,6 +6,7 @@
 #include <fstream>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <algorithm>
 
 using namespace std;
@@ -15,9 +16,6 @@ class FileReader: public Node <void*> {
 public:
     FileReader(string file_directory_name) {
         this->file_directory_name = file_directory_name;
-
-        // Programmer has to manually set the type of the node to emitter for it to recognize it as an emitter
-        this->set_type(NodeType::PipelineEmitter);
     }
 
     void* run(void*) override {
@@ -25,7 +23,7 @@ public:
         cout << "Current directory: " << filesystem::current_path() << endl;
         for (const auto & entry : filesystem::directory_iterator(file_directory_name)) {
             string file_name = entry.path();
-            cout << "Reading file: " << file_name << endl;
+            // cout << "Reading file: " << file_name << endl;
             vector<string> *words = new vector<string>();
             ifstream file(file_name);
             string word;
@@ -40,6 +38,25 @@ public:
 
 private:
     string file_directory_name;
+};
+
+// Removes stop words from the vector of words
+class StopWordRemover: public Node <void*> {
+public:
+    void* run(void* task) override {
+        vector<string> *words = (vector<string> *) task;
+        vector<string> *filtered_words = new vector<string>();
+        unordered_set<string> stop_words = {"i", "my", "that", "this", "a", "an", "the", "in", "on", "at", "to", "of", "by", "I", "you", "he", "she", "it", "we", "they", "is", "are", "am", "was", "were", "be", "been", "being", "have", "has", "had", "do", "does", "did", "will", "shall", "would", "should", "can", "could", "may", "might", "must", "here", "there", "where", "when", "why", "how", "what", "which", "who", "whom", "whose", "and", "or", "but", "not", "no", "yes", "so", "if", "then", "else", "when", "while", "until", "before", "after", "because", "since", "although", "though", "even", "as", "if", "whether", "either", "neither", "both", "each", "every", "any", "all", "some", "most", "many", "few", "several", "such", "own", "other", "another", "more", "less", "least", "only", "very", "much", "more", "most", "little", "least", "fewest", "many", "few", "much"
+        };
+        for (string word : *words) {
+            // Lowercase the word
+            transform(word.begin(), word.end(), word.begin(), ::tolower);
+            if (stop_words.find(word) == stop_words.end()) {
+                filtered_words->push_back(word);
+            }
+        }
+        return (void*) filtered_words;
+    }
 };
 
 // Counts the frequency of each word
@@ -72,10 +89,14 @@ public:
         sort(word_count_vector.begin(), word_count_vector.end(), [](pair<string, int> &a, pair<string, int> &b) {
             return a.second > b.second;
         });
+
+        /*
         cout << "Top Three Words for task " << receive_count << endl;
         for (int i = 0; i < 3; i++) {
             cout << word_count_vector[i].first << ": " << word_count_vector[i].second << endl;
         }
+        */
+
         receive_count++;
         return nullptr;
     }
@@ -87,10 +108,12 @@ private:
 int main() {
     PipelineManager<void*> *pipeline = new PipelineManager<void*>();
     FileReader *file_reader = new FileReader("../Node_Examples/Pipeline/text_data");
+    StopWordRemover *stop_word_remover = new StopWordRemover();
     WordCounter *word_counter = new WordCounter();
     PrintTopThree *print_top_three = new PrintTopThree();
 
     pipeline->add_stage(file_reader);
+    pipeline->add_stage(stop_word_remover);
     pipeline->add_stage(word_counter);
     pipeline->add_stage(print_top_three);
 

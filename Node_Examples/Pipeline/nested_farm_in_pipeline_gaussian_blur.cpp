@@ -9,11 +9,9 @@ using namespace std;
 using namespace EasyBMP;
 namespace fs = std::filesystem;
 
-class ImageReader : public Node {
+class ImageReader : public Node <void*> {
 public:
-    ImageReader(const string& folder_path) : folder_path(folder_path) {
-        this->set_is_pipeline_emitter(true);
-    }
+    ImageReader(const string& folder_path) : folder_path(folder_path) {}
 
     void* run(void*) {
         // Iterate through the images in the specified folder
@@ -23,20 +21,17 @@ public:
             this->get_output_queue()->push(static_cast<void*>(image));
         }
 
-        return nullptr;
+        return EOS;
     }
 
 private:
     string folder_path;
 };
 
-class GrayscaleConverter : public Node {
+class GrayscaleConverter : public Node <void*> {
 public:
     void* run(void* task) {
         EasyBMP::Image* image = static_cast<EasyBMP::Image*>(task);
-
-        cout << "Converting image to grayscale" << endl;
-
         // Convert image to grayscale
         for (int x = 0; x < image->TellWidth(); x++) {
             for (int y = 0; y < image->TellHeight(); y++) {
@@ -50,15 +45,13 @@ public:
     }
 };
 
-class GaussianBlurWorker : public Node {
+class GaussianBlurWorker : public Node <void*> {
 public:
+    GaussianBlurWorker(int num_passes) : num_passes(num_passes) {}
+
     void* run(void* task) {
         EasyBMP::Image* image = static_cast<EasyBMP::Image*>(task);
         EasyBMP::Image* blurred_image = new EasyBMP::Image(image->TellWidth(), image->TellHeight());
-
-        cout << "Applying multiple passes of Gaussian blur" << endl;
-
-        const int num_passes = 5;
 
         for (int pass = 0; pass < num_passes; pass++) {
             for (int x = 2; x < image->TellWidth() - 2; x++) {
@@ -87,19 +80,18 @@ public:
 
         return static_cast<void*>(image);
     }
+
+private:
+    int num_passes;
 };
 
-class ImageWriter : public Node {
+class ImageWriter : public Node <void*> {
 public:
     ImageWriter(const string& output_path) : output_path(output_path) {}
 
     void* run(void* task) {
-        cout << "Final stage!!!! Writing image to " << output_path << endl;
-
         EasyBMP::Image* image = static_cast<EasyBMP::Image*>(task);
-
         cout << "Writing image to " << output_path << endl;
-
         image->Write(output_path.c_str() + to_string(receive_count) + ".bmp");
         delete image;  // Clean up memory
         receive_count++;
@@ -112,36 +104,28 @@ private:
 };
 
 int main(int argc, char* argv[]) {
-    if (argc != 4) {
-        cout << "Usage: ./gaussian_blur <input_image_path> <output_image_path> <blur_farm_num_workers>" << endl;
-        return 1;
-    }
+    string input_image_path = "../Node_Examples/Pipeline/TestImages";
+    string output_image_path = "../Node_Examples/Pipeline/BlurOutput/";
+    int num_workers = 6;
+    int num_passes = 3;
 
-    string input_image_path = argv[1];
-    string output_image_path = argv[2];
-    int num_workers = stoi(argv[3]);
-
-    PipelineManager* pipeline = new PipelineManager();
+    PipelineManager<void*> *pipeline = new PipelineManager<void*>();
     ImageReader* image_reader = new ImageReader(input_image_path);
     GrayscaleConverter* grayscale_converter = new GrayscaleConverter();
 
     // Make a farm of GaussianBlurWorkers
-    FarmManager* gaussian_blur_farm = new FarmManager();
+    FarmManager<void*> *gaussian_blur_farm = new FarmManager<void*>();
 
-//    GaussianBlur* gaussian_blur = new GaussianBlur();
-
+    for (int i = 0; i < num_workers; i++) {
+        GaussianBlurWorker* gaussian_blur_worker = new GaussianBlurWorker(num_passes);
+        gaussian_blur_farm->add_worker(gaussian_blur_worker);
+    }
 
     ImageWriter* image_writer = new ImageWriter(output_image_path);
 
     pipeline->add_stage(image_reader);
     pipeline->add_stage(grayscale_converter);
     pipeline->add_stage(gaussian_blur_farm);
-
-    for (int i = 0; i < num_workers; i++) {
-        GaussianBlurWorker* gaussian_blur_worker = new GaussianBlurWorker();
-        gaussian_blur_farm->add_worker(gaussian_blur_worker);
-    }
-
     pipeline->add_stage(image_writer);
 
     cout << "Number of stages: " << pipeline->get_num_pipeline_stages() << endl;

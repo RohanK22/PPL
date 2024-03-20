@@ -18,7 +18,7 @@
 
 using namespace std;
 
-enum class NodeType {
+enum NodeType {
     None,
     Pipeline,
     PipelineEmitter,
@@ -44,6 +44,7 @@ protected:
     Node *farm_node;
     Node *pipeline_node;
     NodeType node_type;
+    bool is_nested = false; // Tracks node-level nesting
 
     // EOS handling
     static T get_EOS() {
@@ -63,8 +64,12 @@ public:
         DEBUG_NODE_PRINT("Node created with type " << (int)node_type);
     }
 
-    bool get_is_farm() {
-        return this->is_farm;
+    bool get_is_nested() {
+        return this->is_nested;
+    }
+
+    void set_is_nested(bool is_nested) {
+        this->is_nested = is_nested;
     }
 
     Queue<T> *get_input_queue() {

@@ -53,6 +53,12 @@ public:
     // Add worker nodes
     void add_worker(Node<T> *node)
     {
+        NodeType type = node->get_node_type();
+        if (type == NodeType::Farm || type == NodeType::Pipeline)
+        {
+            node->set_is_nested(true);
+            DEBUG_NODE_PRINT("Setting is_nested flag to true");
+        }
         node->set_type(NodeType::FarmWorker);
         node->set_farm_node(this);
         worker_nodes.push_back(node);
@@ -153,10 +159,12 @@ public:
         return static_cast<FarmManager *>(context)->collector_thread_function(context);
     }
 
-    void start_node() override
-    {
-        this->set_input_queue(new Queue<T>());
-        this->set_output_queue(new Queue<T>());
+    void start_node() override {
+        if (!this->get_is_nested()) { // Nested nodes have their queues set by the parent node
+            DEBUG_NODE_PRINT("Node Farm setting input and output queues");
+            this->set_input_queue(new Queue<T>());
+            this->set_output_queue(new Queue<T>());
+        }
 
         if (this->emitter_node != nullptr)
         {

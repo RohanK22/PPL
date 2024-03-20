@@ -25,7 +25,10 @@ public:
 
     // Add stage to the pipeline
     void add_stage(Node<T> *node) {
-        // node->set_is_pipeline_stage(true);
+        if (node->get_node_type() == NodeType::Farm || node->get_node_type() == NodeType::Pipeline) {
+            node->set_is_nested(true);
+            DEBUG_NODE_PRINT("Setting is_nested flag to true");
+        }
         if (node->get_node_type() != NodeType::PipelineEmitter) {
             node->set_type(NodeType::PipelineStage);
         }
@@ -34,8 +37,10 @@ public:
     }
 
     void start_node() override {
-        this->set_input_queue(new Queue<T>());
-        this->set_output_queue(new Queue<T>());
+        if (!this->get_is_nested()) { // Nested node will have their queues set by the parent node
+            this->set_input_queue(new Queue<T>());
+            this->set_output_queue(new Queue<T>());
+        }
 
         for (int i = 0; i < num_pipeline_stages; i ++) {
             if (i == 0) {
@@ -66,6 +71,8 @@ public:
 
     void run_until_finish() {
         try {
+            // Set first node as emitter
+            pipeline_nodes[0]->set_type(NodeType::PipelineEmitter);
             this->start_node();
             this->join_node();
         } catch (std::exception &e) {

@@ -78,4 +78,7 @@ fabric.properties
 cmake-build-debug/
 build/
 
-Examples/*.bmp
+Node_Examples/*.bmp
+Node_Examples/Pipeline/BlurOutput/*.bmp
+Node_Examples/Pipeline/TestImages/*.bmp
+Node_Examples/Pipeline/text_data/*.txt

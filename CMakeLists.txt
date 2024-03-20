@@ -82,6 +82,12 @@ add_executable(pipeline_text_processing
         Node_Examples/Pipeline/pipeline_text_processing.cpp
 )
 
+# Executable target: pipeline_text_processing
+add_executable(seq_text_processing
+        ${COMMON_SOURCES}
+        Node_Examples/Pipeline/seq_text_processing.cpp
+)
+
 # Executable target: gaussian_blur
 add_executable(gaussian_blur
         ${COMMON_SOURCES}
@@ -129,6 +135,11 @@ add_executable(seq_monte_carlo
 add_executable(nested_farm_in_pipeline_gaussian_blur
         ${COMMON_SOURCES}
         Node_Examples/Pipeline/nested_farm_in_pipeline_gaussian_blur.cpp
+)
+
+add_executable(seq_nested_farm_in_pipeline_gaussian_blur
+        ${COMMON_SOURCES}
+        Node_Examples/Pipeline/seq_nested_farm_in_pipeline_gaussian_blur.cpp
 )
 
 # Boost MPI test
