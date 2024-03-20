@@ -1,7 +1,7 @@
 #include <iostream>
 #include "../../src/Node.hpp"
 #include "../../src/FarmManager.hpp"
-#include "../../src/EasyBMP.hpp"
+#include "../../libs/EasyBMP.hpp"
 
 using namespace std;
 using namespace EasyBMP;

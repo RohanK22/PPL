@@ -1,6 +1,6 @@
 #include <iostream>
 #include "../../src/PipelineManager.hpp"
-#include "../../src/EasyBMP.hpp"
+#include "../../libs/EasyBMP.hpp"
 #include <filesystem>
 
 using namespace std;

@@ -1,6 +1,6 @@
 #include <iostream>
 #include <filesystem>
-#include "../../src/EasyBMP.hpp"
+#include "../../libs/EasyBMP.hpp"
 
 using namespace std;
 using namespace EasyBMP;

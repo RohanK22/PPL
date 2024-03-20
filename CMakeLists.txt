@@ -35,7 +35,7 @@ set(COMMON_SOURCES
         src/Timer.hpp
         src/PipelineManager.hpp
         src/Node.hpp
-        src/EasyBMP.hpp
+        libs/EasyBMP.hpp
         src/MPIFarmManager.hpp
         src/MPIPipelineManager.hpp
 )
