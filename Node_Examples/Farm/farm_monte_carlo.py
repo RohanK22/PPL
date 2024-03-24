@@ -63,7 +63,7 @@ for num_samples in num_samples_list:
 # Show legend, title, and labels
 plt.legend()
 plt.title('Speedup vs Number of Node-Farm Workers for Different Number of Monte Carlo Samples')
-plt.xlabel('Number of Node-Level Workers (Number of worker threads)')
+plt.xlabel('Number of Node-Level Workers (#threads)')
 plt.ylabel('Speedup  (T_seq / T_node_farm)')
 plt.grid(True)
 plt.show()
