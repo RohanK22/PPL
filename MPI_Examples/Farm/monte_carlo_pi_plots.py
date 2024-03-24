@@ -6,7 +6,7 @@ import time
 
 # EXEC Paths
 FARM_PI_EXEC = '/cs/home/rk76/Documents/PPL/build/nested_farm_in_mpi_farm_monte_carlo'
-SEQ_PI_EXEC = '../build/seq_monte_carlo'
+SEQ_PI_EXEC = '../../build/seq_monte_carlo'
 
 # Function to run Monte Carlo Pi calculation and measure elapsed time
 def run_pi(exec_path, *args):
@@ -34,7 +34,7 @@ SAMPLES = 5
 num_samples_list = [10000000, 100000000, 1000000000, 10000000000]
 num_node_level_farms_list = [1, 2, 3, 4, 5, 6, 7, 8]
 num_cores = 6
-host_flag = 'pc7-003-l:1,pc7-005-l:1,pc7-007-l:1,pc7-009-l:1,pc7-011-l:1,pc7-015-l:1,pc7-017-l:1,pc7-019-l:1,pc7-020-l:1,pc7-022-l:1,pc7-023-l:1'
+host_flag = 'pc7-001-l:1,pc7-002-l:1,pc7-004-l:1,pc7-005-l:1,pc7-006-l:1,pc7-007-l:1,pc7-008-l:1,pc7-010-l:1,pc7-011-l:1,pc7-012-l:1,pc7-013-l:1,pc7-014-l:1'
 
 # Data storage for mean elapsed times, standard deviations, and sequential elapsed times
 data = {}

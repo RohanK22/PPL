@@ -1,8 +1,7 @@
 #include <iostream>
 #include <vector>
-#include "../../src/MPINode.hpp"
 #include "../../src/MPIFarmManager.hpp"
-#include "../../libs/EasyBMP.hpp"
+#include "../../libs/EasyBMPSerialisable.hpp"
 #include <boost/mpi.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
@@ -92,7 +91,7 @@ public:
     }
 };
 
-class MandelbrotEmitter : public MPINode {
+class MandelbrotEmitter : public Node <string> {
 public:
     MandelbrotEmitter(int width, int height, int numRowChunks, int numColChunks, int maxIterations)
             : width(width), height(height), numRowChunks(numRowChunks), numColChunks(numColChunks),
@@ -126,7 +125,7 @@ public:
 
             return ss.str();
         }
-        return string("EOS");
+        return EOS;
     }
 
 private:
@@ -143,7 +142,7 @@ private:
     vector<MandelbrotChunk> chunks;
 };
 
-class MandelbrotWorker : public MPINode {
+class MandelbrotWorker : public Node <string> {
 public:
     string run(string task) override {
         MandelbrotChunk chunk;
@@ -166,7 +165,7 @@ public:
     }
 };
 
-class MandelbrotCollector : public MPINode {
+class MandelbrotCollector : public Node <string> {
 public:
     MandelbrotCollector(int totalWidth, int totalHeight, int numRowChunks, int numColChunks, const string& image_path)
             : totalWidth(totalWidth), totalHeight(totalHeight), numRowChunks(numRowChunks), numColChunks(numColChunks),
@@ -197,7 +196,7 @@ public:
             cout << "Saving image to " << image_path << endl;
             finalImage.Write(image_path);
 
-            return string("EOS"); // Send EOS
+            return EOS;
         }
 
         return "Collected "; // There is more to be collected
@@ -247,7 +246,7 @@ int main(int argc, char* argv[]) {
         farm->add_worker(worker);
     }
 
-    farm->run("");
+    farm->run_until_finish();
 
     return 0;
 }

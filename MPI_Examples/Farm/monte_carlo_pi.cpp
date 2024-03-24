@@ -43,6 +43,7 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <sstream>
+#include <cstdlib>
 
 #define ull unsigned long long
 #define ld long double
@@ -59,10 +60,14 @@ public:
 
     void perform_simulation()
     {
+        struct drand48_data rand_data;
+        srand48_r(rand(), &rand_data); // Seed the random number generator
+
         for (ull i = 0; i < num_samples; ++i)
         {
-            double x = static_cast<double>(rand()) / RAND_MAX;
-            double y = static_cast<double>(rand()) / RAND_MAX;
+            double x, y;
+            drand48_r(&rand_data, &x);
+            drand48_r(&rand_data, &y);
             if (std::sqrt(x * x + y * y) <= 1.0)
             {
                 inside_circle++;

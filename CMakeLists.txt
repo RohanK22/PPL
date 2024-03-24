@@ -36,6 +36,7 @@ set(COMMON_SOURCES
         src/PipelineManager.hpp
         src/Node.hpp
         libs/EasyBMP.hpp
+        libs/EasyBMPSerialisable.hpp
         src/MPIFarmManager.hpp
         src/MPIPipelineManager.hpp
 )
