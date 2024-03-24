@@ -1,28 +1,27 @@
 #include <iostream>
-//#include "../FarmManager.hpp"
 #include "../../src/PipelineManager.hpp"
 #include <vector>
 #include <numeric>
 
 using namespace std;
 
-class Generator: public Node  {
+class Generator : public Node<void *>
+{
 public:
-    Generator(int num_tasks) {
+    Generator(int num_tasks)
+    {
         this->num_tasks = num_tasks;
-
-        // Set as emitter
-        this->set_is_pipeline_emitter(true);
     }
 
-    void* run(void*) override {
-        if (curr == num_tasks) {
-            std::cout << "Generator Done" << std::endl;
-            return nullptr;
+    void *run(void *) override
+    {
+        if (curr == num_tasks)
+        {
+            return EOS;
         }
         std::cout << "Generated task " << curr << std::endl;
         curr++;
-        return (void*) new vector<int>(curr, 1);
+        return (void *)new vector<int>(curr, 1);
     }
 
 private:
@@ -30,21 +29,20 @@ private:
     int num_tasks;
 };
 
-class Print: public Node  {
+class Print : public Node<void *>
+{
 public:
-    void* run(void* task) override {
-        vector<int> *v = (vector<int> *) task;
-        std::cout << "Stage 2 received task " << receive_count << std::endl;
+    void *run(void *task) override
+    {
+        vector<int> *v = (vector<int> *)task;
         std::cout << "Sum: " << std::accumulate(v->begin(), v->end(), 0) << std::endl;
-        receive_count++;
         return nullptr;
     }
-
-    int receive_count = 0;
 };
 
-int main() {
-    PipelineManager *pipeline = new PipelineManager();
+int main()
+{
+    PipelineManager<void *> *pipeline = new PipelineManager<void *>();
     Generator *generator = new Generator(10);
     Print *print = new Print();
 

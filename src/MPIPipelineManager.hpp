@@ -105,7 +105,6 @@ public:
                 world->send(world->rank() + 1, 0, result);
             }
         }
-
     }
 };
 
