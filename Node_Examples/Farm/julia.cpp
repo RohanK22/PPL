@@ -7,7 +7,8 @@
 using namespace std;
 using namespace EasyBMP;
 
-class JuliaSetChunk {
+class JuliaSetChunk
+{
 public:
     int startRow;
     int endRow;
@@ -23,20 +24,24 @@ public:
     double cReal;
     double cImag;
 
-    vector<vector<RGBColor>> colors;  // 2D array to store RGB colors
+    vector<vector<RGBColor>> colors; // 2D array to store RGB colors
 
     JuliaSetChunk(int startRow, int endRow, int startCol, int endCol, int width, int height,
                   int maxIterations, double minReal, double maxReal, double minImag, double maxImag, double cReal, double cImag)
-            : startRow(startRow), endRow(endRow), startCol(startCol), endCol(endCol),
-              width(width), height(height), maxIterations(maxIterations), minReal(minReal), maxReal(maxReal),
-              minImag(minImag), maxImag(maxImag), cReal(cReal), cImag(cImag) {
+        : startRow(startRow), endRow(endRow), startCol(startCol), endCol(endCol),
+          width(width), height(height), maxIterations(maxIterations), minReal(minReal), maxReal(maxReal),
+          minImag(minImag), maxImag(maxImag), cReal(cReal), cImag(cImag)
+    {
         // Initialize the 2D array with dimensions (width x height)
         colors.resize(width, vector<RGBColor>(height, RGBColor(255, 255, 255)));
     }
 
-    void populateColors() {
-        for (int x = startCol; x < endCol; x++) {
-            for (int y = startRow; y < endRow; y++) {
+    void populateColors()
+    {
+        for (int x = startCol; x < endCol; x++)
+        {
+            for (int y = startRow; y < endRow; y++)
+            {
                 double real = minReal + x * (maxReal - minReal) / width;
                 double imag = minImag + y * (maxImag - minImag) / height;
 
@@ -44,14 +49,16 @@ public:
                 double zImag = imag;
 
                 int n;
-                for (n = 0; n < maxIterations; n++) {
+                for (n = 0; n < maxIterations; n++)
+                {
                     double zReal2 = zReal * zReal - zImag * zImag + cReal;
                     double zImag2 = 2 * zReal * zImag + cImag;
 
                     zReal = zReal2;
                     zImag = zImag2;
 
-                    if (zReal * zReal + zImag * zImag > 4) {
+                    if (zReal * zReal + zImag * zImag > 4)
+                    {
                         break;
                     }
                 }
@@ -67,28 +74,32 @@ public:
     }
 };
 
-class JuliaSetEmitter : public Node {
+class JuliaSetEmitter : public Node<void *>
+{
 public:
     JuliaSetEmitter(int width, int height, int numRowChunks, int numColChunks, int maxIterations,
                     double minReal, double maxReal, double minImag, double maxImag, double cReal, double cImag)
-            : width(width), height(height), numRowChunks(numRowChunks), numColChunks(numColChunks),
-              maxIterations(maxIterations), minReal(minReal), maxReal(maxReal), minImag(minImag),
-              maxImag(maxImag), cReal(cReal), cImag(cImag) {}
+        : width(width), height(height), numRowChunks(numRowChunks), numColChunks(numColChunks),
+          maxIterations(maxIterations), minReal(minReal), maxReal(maxReal), minImag(minImag),
+          maxImag(maxImag), cReal(cReal), cImag(cImag) {}
 
-    void* run(void* task) override {
+    void *run(void *task) override
+    {
         int rowsPerChunk = height / numRowChunks;
         int colsPerChunk = width / numColChunks;
 
-        for (int i = 0; i < numRowChunks; i++) {
-            for (int j = 0; j < numColChunks; j++) {
+        for (int i = 0; i < numRowChunks; i++)
+        {
+            for (int j = 0; j < numColChunks; j++)
+            {
                 int startRow = i * rowsPerChunk;
                 int endRow = (i == numRowChunks - 1) ? height : startRow + rowsPerChunk;
                 int startCol = j * colsPerChunk;
                 int endCol = (j == numColChunks - 1) ? width : startCol + colsPerChunk;
 
-                JuliaSetChunk* chunk = new JuliaSetChunk(startRow, endRow, startCol, endCol, width, height,
+                JuliaSetChunk *chunk = new JuliaSetChunk(startRow, endRow, startCol, endCol, width, height,
                                                          maxIterations, minReal, maxReal, minImag, maxImag, cReal, cImag);
-                this->get_output_queue()->push((void*)chunk);
+                this->get_output_queue()->push((void *)chunk);
             }
         }
 
@@ -109,35 +120,41 @@ private:
     double cImag;
 };
 
-class JuliaSetWorker : public Node {
+class JuliaSetWorker : public Node<void *>
+{
 public:
-    void* run(void* task) override {
+    void *run(void *task) override
+    {
         cout << "Worker received chunk" << endl;
-        JuliaSetChunk* chunk = (JuliaSetChunk*)task;
+        JuliaSetChunk *chunk = (JuliaSetChunk *)task;
 
         // Populate the colors in the chunk
         chunk->populateColors();
 
         // Return the populated chunk
-        return (void*)chunk;
+        return (void *)chunk;
     }
 };
 
-class JuliaSetCollector : public Node {
+class JuliaSetCollector : public Node<void *>
+{
 public:
-    JuliaSetCollector(int totalWidth, int totalHeight, int numRowChunks, int numColChunks, const string& image_path)
-            : totalWidth(totalWidth), totalHeight(totalHeight), numRowChunks(numRowChunks), numColChunks(numColChunks),
-              image_path(image_path),
-              finalImage(totalWidth, totalHeight, RGBColor(255, 255, 255)) {}
+    JuliaSetCollector(int totalWidth, int totalHeight, int numRowChunks, int numColChunks, const string &image_path)
+        : totalWidth(totalWidth), totalHeight(totalHeight), numRowChunks(numRowChunks), numColChunks(numColChunks),
+          image_path(image_path),
+          finalImage(totalWidth, totalHeight, RGBColor(255, 255, 255)) {}
 
-    void* run(void* task) override {
-        JuliaSetChunk* chunk = (JuliaSetChunk*)task;
+    void *run(void *task) override
+    {
+        JuliaSetChunk *chunk = (JuliaSetChunk *)task;
 
         cout << "Collector received chunk" << endl;
 
         // Copy colors from the chunk to the final image
-        for (int x = chunk->startCol; x < chunk->endCol; x++) {
-            for (int y = chunk->startRow; y < chunk->endRow; y++) {
+        for (int x = chunk->startCol; x < chunk->endCol; x++)
+        {
+            for (int y = chunk->startRow; y < chunk->endRow; y++)
+            {
                 finalImage.SetPixel(x, y, chunk->colors[x - chunk->startCol][y - chunk->startRow]);
             }
         }
@@ -145,12 +162,14 @@ public:
         received++;
         cout << "Progress % " << (received * 100) / numChunks << endl;
 
-        if (received == numChunks) {
+        if (received == numChunks)
+        {
             cout << "Saving image to " << image_path << endl;
             finalImage.Write(image_path);
+            return EOS;
         }
 
-        return nullptr;
+        return chunk;
     }
 
 private:
@@ -161,12 +180,14 @@ private:
     string image_path;
     Image finalImage;
     int received = 0;
-    int numChunks = numRowChunks * numColChunks;  // Assuming this variable is accessible here
+    int numChunks = numRowChunks * numColChunks; // Assuming this variable is accessible here
 };
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[])
+{
     // Read parameters from the command line
-    if (argc != 7) {
+    if (argc != 7)
+    {
         cout << "Usage: ./julia_set <width> <height> <maxIterations> <numRowChunks> <numColChunks> <numWorkers>" << endl;
         return 1;
     }
@@ -181,15 +202,16 @@ int main(int argc, char* argv[]) {
     double cImag = 0.27015;
     string image_path = "julia_" + to_string(width) + "x" + to_string(height) + ".bmp";
 
-    FarmManager* farm = new FarmManager();
-    JuliaSetEmitter* emitter = new JuliaSetEmitter(width, height, numRowChunks, numColChunks, maxIterations, -2, 2, -1.5, 1.5, cReal, cImag);
-    JuliaSetCollector* collector = new JuliaSetCollector(width, height, numRowChunks, numColChunks, image_path);
+    FarmManager<void *> *farm = new FarmManager<void *>();
+    JuliaSetEmitter *emitter = new JuliaSetEmitter(width, height, numRowChunks, numColChunks, maxIterations, -2, 2, -1.5, 1.5, cReal, cImag);
+    JuliaSetCollector *collector = new JuliaSetCollector(width, height, numRowChunks, numColChunks, image_path);
 
     farm->add_emitter(emitter);
     farm->add_collector(collector);
 
-    for (int i = 0; i < numWorkers; i++) {
-        JuliaSetWorker* worker = new JuliaSetWorker();
+    for (int i = 0; i < numWorkers; i++)
+    {
+        JuliaSetWorker *worker = new JuliaSetWorker();
         farm->add_worker(worker);
     }
 

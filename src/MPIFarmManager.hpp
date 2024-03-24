@@ -60,7 +60,7 @@ public:
         auto output_queue = worker_node->get_output_queue();
         if (!output_queue)
         {
-            throw runtime_error("------------------------Fatal error: Output queue is null");
+            throw runtime_error("Fatal error: Distributed Node Ouptput queue is null");
         }
 
         while (true)
@@ -83,33 +83,25 @@ public:
 
     static void *thread_function_helper2(void *context)
     {
-        // Pass args to distribution_thread function
         return static_cast<MPIFarmManager *>(context)->thread_function2(context);
     }
 
     void run_until_finish()
     {
-        //        int i = 0;
-        //        while (!i) {
-        //            sleep(5);
-        //        }
-
         int size = world->size();
         if (world->rank() == 0)
         {
             // Master Process that manages the farm
-            cout << "Master says hello" << endl;
-            cout << "Number of workers: " << num_workers << endl;
+            DEBUG_NODE_PRINT("MPI Farm Manager: Starting farm manager with " + to_string(num_workers) + " workers");
 
             // Wait for response from collector
             while (true)
             {
                 string response;
                 world->recv(2, 0, response);
-                // cout << "Master received response from collector: " << response << endl;
                 if (response == "EOS")
                 {
-                    cout << "Master done" << endl;
+                    DEBUG_NODE_PRINT("MPI Farm Manager: Received EOS from collector");
                     break;
                 }
             }
@@ -121,19 +113,15 @@ public:
                 string task = emitter_node->run("");
                 if (task == "EOS")
                 {
-                    // cout << "Emitter done" << endl;
-
-                    //                     Send EOS to workers
                     for (int i = 0; i < size - 3; i++)
                     {
+                        // Send EOS to all workers
                         world->send(i + 3, 0, string("EOS"));
-                        // cout << "Sending worker " << to_string(i + 3) << " EOS" << endl;
                     }
 
                     break;
                 }
-                // cout << "Sending task " << task << " to worker " << to_string(rr_index + 3) << endl;
-                // Distribute task to worker
+                // Distribute task to worker -- round robin
                 world->send(rr_index + 3, 0, task);
                 rr_index = (rr_index + 1) % (size - 3);
             }
@@ -149,16 +137,10 @@ public:
                 if (result == "EOS")
                 {
                     collector_eos_count++;
-
-                    // cout << "Collector got " << to_string(collector_eos_count) << " EOS counts out of " << to_string(num_workers) << endl;
-
                     if (collector_eos_count == num_workers)
                     {
-                        // cout << "Collector done" << endl;
-
                         // Send EOS to master
                         world->send(0, 0, string("EOS"));
-
                         break;
                     }
                     continue; // Wait for more EOS
@@ -175,14 +157,11 @@ public:
         {
             Node<string> *worker_node = worker_nodes[world->rank() - 3];
 
-            if (worker_node->get_node_type() == NodeType::Farm)
+            if (worker_node->get_node_type() == NodeType::Farm || worker_node->get_node_type() == NodeType::Pipeline)
             {
                 // Farm node
                 worker_node->start_node();
                 pthread_t result_collector_thread;
-
-                // Wait two seconds for the distribution_thread to start
-                //                sleep(2);
                 pthread_create(&result_collector_thread, nullptr, thread_function_helper2, this);
 
                 while (true)
@@ -190,19 +169,11 @@ public:
                     string task;
                     world->recv(1, 0, task);
 
-                    // cout << "Emitter sent task " << task << " to worker " << world->rank() << endl;
                     if (task == "EOS")
                     {
-                        cout << "Worker " << world->rank() << " done" << endl;
-
-                        // Push EOS to worker node
-                        // TODO: Clean
                         worker_node->get_input_queue()->push("EOS");
-
                         break;
                     }
-
-                    // cout << "MPI Worker " << world->rank() << " received task " << task << endl;
 
                     // Send task to farm
                     worker_node->run(task);
@@ -220,11 +191,7 @@ public:
                     world->recv(1, 0, task);
                     if (task == "EOS")
                     {
-
-                        // Push EOS to worker node
-                        // TODO: Clean
                         worker_node->get_input_queue()->push("EOS");
-
                         worker_node->join_node();
 
                         // Send EOS to collector
@@ -232,11 +199,8 @@ public:
 
                         break;
                     }
-                    // Send task to farm
-                    worker_node->run(task);
-
-                    // Send result to collector
-                    //                    world->send(2, 0, result);
+                    // Send task to node
+                    worker_node->get_input_queue()->push(task);
                 }
             }
         }
